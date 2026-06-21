@@ -475,7 +475,7 @@
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const ym = (y,m) => y*12+m;
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 
 class Component extends DCLogic {
   rootRef = React.createRef();
@@ -841,7 +841,7 @@ class Component extends DCLogic {
     });
 
     // fixed list
-    const fxList=s.fixed.map(f=>({
+    const fxList=s.fixed.filter(f=> sel>=(f.startIdx||0) && (f.endIdx==null || sel<=f.endIdx)).map(f=>({
       key:'f'+f.id, name:f.name, cat:f.cat, amountVal:this.debAmount(f, sel), sym:'$', onAmount:(e)=>this.setFixedAmount(f.id, e.target.value), check: f.active?'✓':'', once: (f.endIdx!=null && f.endIdx===f.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(f.active?'var(--green)':'var(--faint)'),background:f.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:f.active?'var(--text)':'var(--faint)',textDecoration:f.active?'none':'line-through'},
@@ -849,7 +849,7 @@ class Component extends DCLogic {
       onToggle:()=>this.toggleFixed(f.id), onDel:()=>this.delFixed(f.id),
     }));
 
-    const inList=s.income.map(i=>{ const cur2=i.currency||'ARS'; return {
+    const inList=s.income.filter(i=> sel>=(i.startIdx||0) && (i.endIdx==null || sel<=i.endIdx)).map(i=>{ const cur2=i.currency||'ARS'; return {
       key:'in'+i.id, name:i.name, amountVal:this.debAmount(i, sel), sym: cur2==='USD'?'US$':'$', onAmount:(e)=>this.setIncomeAmount(i.id, e.target.value), isUSD:cur2==='USD', check:i.active?'✓':'', once: (i.endIdx!=null && i.endIdx===i.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(i.active?'var(--green)':'var(--faint)'),background:i.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:i.active?'var(--text)':'var(--faint)',textDecoration:i.active?'none':'line-through'},
