@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0e13">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ece8df">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,7 +25,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;}
-    html,body{margin:0;padding:0;height:100%;background:#0c0e13;}
+    html,body{margin:0;padding:0;height:100%;background:#0c0e13;touch-action:manipulation;-webkit-text-size-adjust:100%;}
     @media (prefers-color-scheme: light){ html,body{background:#ece8df;} }
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
@@ -37,6 +37,7 @@
     main{scrollbar-width:none;-ms-overflow-style:none;}
     main::-webkit-scrollbar{display:none;}
     input,select,button{font-family:'IBM Plex Sans',sans-serif;}
+    input,select,textarea{font-size:16px !important;}
     input:focus,select:focus{outline:none;border-color:var(--green)!important;}
     @media (max-width:760px){ main section{ padding-left:18px!important; padding-right:18px!important; } }
     [data-glass]{ -webkit-backdrop-filter:var(--glass); backdrop-filter:var(--glass); box-shadow:var(--glass-shadow); }
@@ -345,6 +346,9 @@
     </div>
   </main>
 
+  <!-- Pull-to-refresh -->
+  <div ref="{{ pullRef }}" style="position:absolute; top:6px; left:50%; transform:translateX(-50%); z-index:7; pointer-events:none; opacity:0; transition:opacity .2s ease; background:var(--surface2); color:var(--muted); font-size:12px; font-weight:500; padding:7px 14px; border-radius:20px; border:1px solid var(--border2); box-shadow:0 5px 16px rgba(0,0,0,0.22); white-space:nowrap;">Tirá para actualizar</div>
+
   <!-- Scroll edge: vidrio superior que aparece al scrollear -->
   <div ref="{{ scrollEdgeRef }}" style="position:absolute; top:0; left:0; right:0; height:108px; z-index:6; pointer-events:none; opacity:0; transition:opacity .25s ease; -webkit-backdrop-filter:blur(13px) saturate(1.35); backdrop-filter:blur(13px) saturate(1.35); -webkit-mask-image:linear-gradient(to bottom, #000 32%, transparent); mask-image:linear-gradient(to bottom, #000 32%, transparent);"></div>
 
@@ -456,6 +460,7 @@ class Component extends DCLogic {
   mainRef = React.createRef();
   scrollThumbRef = React.createRef();
   scrollEdgeRef = React.createRef();
+  pullRef = React.createRef();
   currentIdx = (function(){ const d=new Date(); return d.getFullYear()*12 + d.getMonth(); })(); // mes actual real
 
   themes = {
@@ -506,6 +511,7 @@ class Component extends DCLogic {
 
   componentDidMount(){
     try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(e){}
+    try{ ['gesturestart','gesturechange','gestureend'].forEach(function(ev){ document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false}); }); }catch(e){}
     const measure = ()=>{ const el=this.rootRef.current; if(el && el.clientWidth) this.setState({vw: el.clientWidth}); };
     this._ro = (typeof ResizeObserver!=='undefined') ? new ResizeObserver(measure) : null;
     if(this._ro && this.rootRef.current) this._ro.observe(this.rootRef.current);
@@ -528,6 +534,19 @@ class Component extends DCLogic {
     }
     this._onDocDown=(e)=>{ if(!this.state.rateOpen) return; const t=e.target; if(t && t.closest && (t.closest('[data-rate-pop]')||t.closest('[data-rate-btn]'))) return; this.setState({rateOpen:false}); };
     document.addEventListener('pointerdown', this._onDocDown, true);
+    // pull-to-refresh
+    const scEl=this.mainRef.current;
+    if(scEl){
+      let startY=0, pulling=false, dy=0;
+      const ind=this.pullRef;
+      const setInd=(d)=>{ const el=ind.current; if(!el) return; el.style.opacity=String(Math.min(1, d/80)); el.style.transform='translateX(-50%) translateY('+Math.min(d*0.5, 48)+'px)'; el.textContent = d>80 ? 'Soltá para actualizar' : 'Tirá para actualizar'; };
+      this._ptrStart=(e)=>{ if(scEl.scrollTop<=0){ startY=e.touches[0].clientY; pulling=true; dy=0; } else { pulling=false; } };
+      this._ptrMove=(e)=>{ if(!pulling) return; dy=e.touches[0].clientY-startY; if(dy>0 && scEl.scrollTop<=0){ if(e.cancelable) e.preventDefault(); setInd(dy); } };
+      this._ptrEnd=()=>{ if(!pulling) return; pulling=false; const el=ind.current; if(dy>80){ if(el){ el.textContent='Actualizando…'; el.style.opacity='1'; } setTimeout(()=>{ try{ location.reload(); }catch(_){} }, 200); } else if(el){ el.style.opacity='0'; el.style.transform='translateX(-50%) translateY(0)'; } };
+      scEl.addEventListener('touchstart', this._ptrStart, {passive:true});
+      scEl.addEventListener('touchmove', this._ptrMove, {passive:false});
+      scEl.addEventListener('touchend', this._ptrEnd, {passive:true});
+    }
     try{
       const raw = localStorage.getItem('cuotas_v2');
       if(raw){ const d = JSON.parse(raw);
@@ -549,6 +568,7 @@ class Component extends DCLogic {
     if(this._mq && this._applySys){ if(this._mq.removeEventListener) this._mq.removeEventListener('change', this._applySys); else if(this._mq.removeListener) this._mq.removeListener(this._applySys); }
     if(this._updThumb && this.mainRef.current) this.mainRef.current.removeEventListener('scroll', this._updThumb);
     if(this._onDocDown) document.removeEventListener('pointerdown', this._onDocDown, true);
+    if(this.mainRef.current){ const s=this.mainRef.current; if(this._ptrStart) s.removeEventListener('touchstart', this._ptrStart); if(this._ptrMove) s.removeEventListener('touchmove', this._ptrMove); if(this._ptrEnd) s.removeEventListener('touchend', this._ptrEnd); }
   }
   componentDidUpdate(){
     const s=this.state;
@@ -572,15 +592,22 @@ class Component extends DCLogic {
   money(n,cur){ return cur==='USD' ? this.fmtU(n) : this.fmt(n); }
   fmtShort(n){ if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace('.',',')+'M'; return '$'+Math.round(n/1000)+'k'; }
   parseAmount(str, cur){
-    let v = String(str).replace(/[^0-9.,]/g,'');
-    if(cur==='USD'){
-      v = v.replace(/,/g,'.');
-      const parts = v.split('.');
-      if(parts.length>2) v = parts[0]+'.'+parts.slice(1).join('');
-      return parseFloat(v)||0;
+    let v = String(str).trim().replace(/[^0-9.,]/g,'');
+    if(!v) return 0;
+    const lastSep = Math.max(v.lastIndexOf(','), v.lastIndexOf('.'));
+    if(lastSep >= 0){
+      const decimals = v.length - lastSep - 1;
+      if(decimals >= 1 && decimals <= 2){
+        // el último separador es decimal (ej. 100,50 o 100.50)
+        const intPart = v.slice(0, lastSep).replace(/[.,]/g,'');
+        const decPart = v.slice(lastSep + 1).replace(/[.,]/g,'');
+        v = intPart + '.' + decPart;
+      } else {
+        // separadores de miles (ej. 1.000.000)
+        v = v.replace(/[.,]/g,'');
+      }
     }
-    v = v.replace(/\./g,'').replace(/,/g,'.');
-    return parseFloat(v)||0;
+    return parseFloat(v) || 0;
   }
   cardItemsFor(idx){
     return this.state.purchases
@@ -829,7 +856,7 @@ class Component extends DCLogic {
     const rateRows=[]; for(let i=0;i<6;i++){ const idx=sel+i; rateRows.push({ key:'rt'+idx, label:this.mLong(idx), rateVal:this.rate(idx), onRate:(e)=>this.setRate(idx, e.target.value) }); }
 
     return {
-      rootRef:this.rootRef, mainRef:this.mainRef, scrollThumbRef:this.scrollThumbRef, scrollEdgeRef:this.scrollEdgeRef,
+      rootRef:this.rootRef, mainRef:this.mainRef, scrollThumbRef:this.scrollThumbRef, scrollEdgeRef:this.scrollEdgeRef, pullRef:this.pullRef,
       // responsive
       isMobile:m,
       asideStyle: m
