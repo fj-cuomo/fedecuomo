@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0e13">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ece8df">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cuotas">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#0f1115">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="468" y="210" width="264" height="380" rx="64" fill="#7dd3a0"/>
+    <text x="600" y="470" font-family="-apple-system,Segoe UI,sans-serif" font-size="230" font-weight="700" fill="#0f1115" text-anchor="middle">$</text>
+  </svg>
+</template>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;height:100%;background:#0c0e13;}
+    @media (prefers-color-scheme: light){ html,body{background:#ece8df;} }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+    @keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+    @keyframes popOut{from{opacity:0;transform:scale(.95) translateY(-7px)}to{opacity:1;transform:none}}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px}
+    main{scrollbar-width:none;-ms-overflow-style:none;}
+    main::-webkit-scrollbar{display:none;}
+    input,select,button{font-family:'IBM Plex Sans',sans-serif;}
+    input:focus,select:focus{outline:none;border-color:var(--green)!important;}
+    @media (max-width:760px){ main section{ padding-left:18px!important; padding-right:18px!important; } }
+    [data-glass]{ -webkit-backdrop-filter:var(--glass); backdrop-filter:var(--glass); box-shadow:var(--glass-shadow); }
+  </style>
+</helmet>
+<div ref="{{ rootRef }}" style="--bg:#0f1115;--surface:#15181f;--surface2:#1c2029;--elev:#222734;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);--text:#e9e7e1;--muted:#8b909e;--faint:#595e6a;--green:#7dd3a0;--green-dim:rgba(125,211,160,0.14);--sand:#e0b075;--sand-dim:rgba(224,176,117,0.14);--shadow:rgba(0,0,0,0.4);--glass:blur(22px) saturate(1.7);--glass-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 14px 42px rgba(0,0,0,0.34);--bg-grad:radial-gradient(60% 50% at 85% 6%, rgba(125,211,160,0.14), transparent 60%), radial-gradient(55% 48% at 8% 94%, rgba(230,185,127,0.12), transparent 60%), linear-gradient(160deg, #141e27, #0b0d12); height:100%; min-height:100%; display:flex; position:relative; background:var(--bg-grad); color:var(--text); font-family:'IBM Plex Sans',sans-serif; overflow:hidden;">
+
+  <!-- SIDEBAR / BOTTOM BAR -->
+  <aside data-glass style="{{ asideStyle }}">
+    <div style="{{ brandStyle }}">
+      <div style="width:34px; height:34px; border-radius:9px; background:var(--green); display:flex; align-items:center; justify-content:center; flex:none;">
+        <span style="font-family:'Space Grotesk'; font-weight:700; font-size:19px; color:#0f1115;">C</span>
+      </div>
+      <div>
+        <div style="font-family:'Space Grotesk'; font-weight:600; font-size:17px; letter-spacing:-0.3px; line-height:1;">Cuotas</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:3px; letter-spacing:0.2px;">gastos personales</div>
+      </div>
+    </div>
+
+    <nav style="{{ navWrapStyle }}">
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}"><div style="{{ pillStyle }}"></div></sc-if>
+      <button style="{{ navRes }}" style-active="transform:scale(0.9);" onClick="{{ goResumen }}"><span style="{{ iconStyle }}">◷</span>Resumen</button>
+      <button style="{{ navTar }}" style-active="transform:scale(0.9);" onClick="{{ goTarjeta }}"><span style="{{ iconStyle }}">▭</span>Tarjeta</button>
+      <button style="{{ navFij }}" style-active="transform:scale(0.9);" onClick="{{ goFijos }}"><span style="{{ iconStyle }}">≡</span>{{ labFijos }}</button>
+      <button style="{{ navIng }}" style-active="transform:scale(0.9);" onClick="{{ goIngresos }}"><span style="{{ iconStyleIng }}">$</span>Ingresos</button>
+    </nav>
+
+
+  </aside>
+
+  <!-- MAIN -->
+  <main ref="{{ mainRef }}" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+    <div style="{{ mainInnerStyle }}">
+
+      <!-- MOBILE TOP BAR -->
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:16px;">
+          <div style="display:flex; justify-content:flex-end; align-items:center; min-height:38px;">
+            <button style="background:transparent;border:none;color:var(--text);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;" style-active="transform:scale(0.9) rotate(40deg);" onClick="{{ openSettings }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+          </div>
+          <h1 style="font-family:'Space Grotesk'; font-weight:700; font-size:33px; letter-spacing:-1px; line-height:1.05; margin:18px 0 0;">{{ viewTitle }}</h1>
+        </div>
+      </sc-if>
+
+      <!-- HEADER -->
+      <header style="{{ headerStyle }}">
+        <div style="display:flex; align-items:center; gap:18px;">
+          <div data-glass style="display:flex; align-items:center; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:5px;">
+            <button style="width:30px;height:30px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;" style-hover="background:var(--surface2);color:var(--text);" onClick="{{ prev }}">‹</button>
+            <span style="font-family:'Space Grotesk'; font-weight:600; font-size:16px; min-width:130px; text-align:center; letter-spacing:-0.2px; text-transform:capitalize;">{{ monthLabel }}</span>
+            <button style="width:30px;height:30px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;" style-hover="background:var(--surface2);color:var(--text);" onClick="{{ next }}">›</button>
+          </div>
+
+        </div>
+        <button style="{{ newBtnStyle }}" style-hover="transform:translateY(-1px);" onClick="{{ openModal }}"><span style="font-size:17px;line-height:1;margin-top:-1px;">+</span>Nuevo</button>
+      </header>
+
+      <!-- ====== RESUMEN ====== -->
+      <sc-if value="{{ isResumen }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:22px; animation:fadeIn .35s ease;">
+
+          <!-- HERO -->
+          <section data-glass style="{{ heroCardStyle }}">
+            <div>
+              <div style="font-size:13px; color:var(--muted); letter-spacing:0.3px; margin-bottom:10px;">A pagar en <span style="text-transform:capitalize;color:var(--text);">{{ monthLabel }}</span></div>
+              <div style="{{ heroNumStyle }}">{{ monthTotal }}</div>
+              <sc-if value="{{ hasMonthUsd }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:9px; font-family:'Space Grotesk'; font-weight:600; font-size:14px; color:var(--sand); font-feature-settings:'tnum';">incluye {{ monthUsd }} <span style="font-size:12px;color:var(--muted);font-weight:400;">· dólar a {{ rateSelFmt }}</span></div>
+              </sc-if>
+              <div style="display:flex; gap:18px 22px; margin-top:20px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <span style="width:9px;height:9px;border-radius:50%;background:var(--green);display:block;"></span>
+                  <span style="font-size:13px;color:var(--muted);">Pago directo</span>
+                  <span style="font-family:'Space Grotesk';font-weight:600;font-size:14px;font-feature-settings:'tnum';">{{ fixedDirectFmt }}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <span style="width:9px;height:9px;border-radius:50%;background:var(--sand);display:block;"></span>
+                  <span style="font-size:13px;color:var(--muted);">Resumen tarjeta</span>
+                  <span style="font-family:'Space Grotesk';font-weight:600;font-size:14px;font-feature-settings:'tnum';">{{ cardArsFmt }}</span>
+                  <span style="font-size:11.5px;color:var(--faint);">· {{ cuotaCount }} cuotas · {{ debitCount }} débitos</span>
+                </div>
+              </div>
+              <div style="margin-top:16px; padding-top:15px; border-top:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-size:13px;color:var(--muted);">Balance del mes</span>
+                <span style="{{ balanceStyle }}">{{ balanceFmt }}</span>
+                <span style="font-size:11.5px;color:var(--faint);">ingresos − a pagar</span>
+              </div>
+            </div>
+            <button data-rate-btn style="{{ dollarBtnStyle }}" style-active="transform:scale(0.92);" onClick="{{ toggleRate }}">$</button>
+            <sc-if value="{{ rateOpen }}" hint-placeholder-val="{{ false }}">
+              <div data-rate-pop style="position:absolute; top:48px; right:10px; z-index:5; width:234px; max-width:calc(100% - 20px); background:var(--bg); border:1px solid var(--border2); border-radius:14px; padding:14px 16px; box-shadow:0 14px 34px rgba(0,0,0,0.4); transform-origin:top right; animation:popOut .32s cubic-bezier(.16,1,.3,1);">
+                <div style="font-size:12px;color:var(--text);font-weight:500;margin-bottom:9px;">Dólar <span style="text-transform:capitalize;">{{ prevRateLabel }}</span>: {{ prevRateFmt }}</div>
+                <div style="display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:9px 13px;">
+                  <span style="color:var(--muted);font-family:'Space Grotesk';font-size:13px;white-space:nowrap;">US$1 = $</span>
+                  <input value="{{ rateSelVal }}" onChange="{{ onRateSel }}" inputmode="numeric" style="flex:1;min-width:0;width:100%;border:none;background:transparent;color:var(--text);font-family:'Space Grotesk';font-size:16px;text-align:right;font-feature-settings:'tnum';padding:0;" />
+                </div>
+                <div style="font-size:10.5px;color:var(--faint);margin-top:8px;">Rige de este mes en adelante</div>
+                <button style="width:100%;margin-top:11px;background:color-mix(in srgb, var(--green) 70%, black);color:#ffffff;border:none;border-radius:9px;padding:10px;font-size:13.5px;font-weight:600;cursor:pointer;" onClick="{{ toggleRate }}">Guardar</button>
+              </div>
+            </sc-if>
+          </section>
+
+          <!-- FORECAST -->
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:26px 30px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:16px;margin:0;letter-spacing:-0.2px;">Pago mes a mes</h2>
+                <p style="margin:5px 0 0;font-size:12.5px;color:var(--muted);">En pesos — baja a medida que se saldan las cuotas</p>
+              </div>
+              <div style="display:flex; gap:16px;">
+                <div style="display:flex;align-items:center;gap:7px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);"></span><span style="font-size:12px;color:var(--muted);">Pago directo</span></div>
+                <div style="display:flex;align-items:center;gap:7px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--sand);"></span><span style="font-size:12px;color:var(--muted);">Tarjeta</span></div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:14px; height:212px;">
+              <sc-for list="{{ forecast }}" as="bar" hint-placeholder-count="6">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:9px; cursor:pointer; height:100%; justify-content:flex-end;" onClick="{{ bar.onClick }}">
+                  <div style="{{ bar.labelStyle }}">{{ bar.totalShort }}</div>
+                  <div style="width:100%; max-width:62px; display:flex; flex-direction:column; justify-content:flex-end; transform-origin:bottom; animation:growBar .5s cubic-bezier(.2,.7,.3,1);">
+                    <div style="{{ bar.cardStyle }}"></div>
+                    <div style="{{ bar.fijosStyle }}"></div>
+                  </div>
+                  <div style="{{ bar.tickStyle }}">{{ bar.short }}</div>
+                  <div style="{{ bar.usdStyle }}">{{ bar.usdNote }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <!-- TARJETA DEL MES -->
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:26px 30px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; gap:12px;">
+              <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:16px;margin:0;letter-spacing:-0.2px;">Tarjeta de <span style="text-transform:capitalize;">{{ monthLabel }}</span></h2>
+              <div style="text-align:right;">
+                <div style="font-family:'Space Grotesk';font-weight:600;font-size:15px;color:var(--sand);font-feature-settings:'tnum';">{{ cardArsFmt }}</div>
+                <sc-if value="{{ hasCardUsd }}" hint-placeholder-val="{{ false }}"><div style="font-family:'Space Grotesk';font-size:12.5px;color:var(--muted);font-feature-settings:'tnum';">incl. {{ cardUsdFmt }}</div></sc-if>
+              </div>
+            </div>
+            <sc-if value="{{ hasCuotas }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column;">
+                <sc-for list="{{ cardLines }}" as="c" hint-placeholder-count="4">
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border); gap:12px;">
+                    <div style="display:flex; align-items:center; gap:13px; min-width:0;">
+                      <span style="{{ c.dotStyle }}"></span>
+                      <div style="min-width:0;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <span style="font-size:14px;font-weight:500;">{{ c.desc }}</span>
+                          <sc-if value="{{ c.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
+                        </div>
+                        <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ c.sub }}</div>
+                      </div>
+                    </div>
+                    <span style="font-family:'Space Grotesk';font-weight:500;font-size:14px;font-feature-settings:'tnum';white-space:nowrap;">{{ c.amount }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noCuotas }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center; padding:26px; color:var(--muted); font-size:13.5px;">Sin movimientos de tarjeta este mes.</div>
+            </sc-if>
+          </section>
+        </div>
+      </sc-if>
+
+      <!-- ====== TARJETA ====== -->
+      <sc-if value="{{ isTarjeta }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px; animation:fadeIn .35s ease;">
+          <section style="{{ statsGridStyle }}">
+            <div data-glass style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;">
+              <div style="font-size:12.5px;color:var(--muted);margin-bottom:9px;">Total tarjeta · este mes</div>
+              <div style="font-family:'Space Grotesk';font-weight:600;font-size:26px;letter-spacing:-0.6px;color:var(--sand);font-feature-settings:'tnum';">{{ curCardArsFmt }}</div>
+              <sc-if value="{{ hasCurUsd }}" hint-placeholder-val="{{ false }}"><div style="font-family:'Space Grotesk';font-size:13px;color:var(--muted);margin-top:3px;font-feature-settings:'tnum';">incl. {{ curCardUsdFmt }} a {{ curRateFmt }}</div></sc-if>
+            </div>
+            <div data-glass style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;">
+              <div style="font-size:12.5px;color:var(--muted);margin-bottom:9px;">Movimientos activos</div>
+              <div style="font-family:'Space Grotesk';font-weight:600;font-size:26px;letter-spacing:-0.6px;font-feature-settings:'tnum';">{{ activeCount }}</div>
+            </div>
+            <div data-glass style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;">
+              <div style="font-size:12.5px;color:var(--muted);margin-bottom:9px;">Saldo en cuotas</div>
+              <div style="font-family:'Space Grotesk';font-weight:600;font-size:26px;letter-spacing:-0.6px;font-feature-settings:'tnum';">{{ saldoFmt }}</div>
+              <sc-if value="{{ hasSaldoUsd }}" hint-placeholder-val="{{ false }}"><div style="font-family:'Space Grotesk';font-size:13px;color:var(--muted);margin-top:3px;font-feature-settings:'tnum';">incl. {{ saldoUsdFmt }}</div></sc-if>
+            </div>
+          </section>
+
+          <!-- COMPRAS EN CUOTAS -->
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px 28px 12px;">
+            <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:15px;margin:0 0 4px;letter-spacing:-0.2px;">Compras</h2>
+            <sc-for list="{{ pPurchases }}" as="p" hint-placeholder-count="5">
+              <div style="padding:18px 0; border-bottom:1px solid var(--border);">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px;">
+                  <div style="flex:1; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:9px; margin-bottom:6px; flex-wrap:wrap;">
+                      <span style="font-size:15px;font-weight:600;">{{ p.desc }}</span>
+                      <sc-if value="{{ p.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
+                      <span style="{{ p.badgeStyle }}">{{ p.status }}</span>
+                    </div>
+                    <div style="font-size:12.5px;color:var(--muted);">{{ p.sub }}</div>
+                  </div>
+                  <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                    <div style="font-family:'Space Grotesk';font-weight:600;font-size:16px;font-feature-settings:'tnum';white-space:nowrap;">{{ p.monthly }}<span style="font-size:11.5px;color:var(--muted);font-weight:400;">{{ p.perMes }}</span></div>
+                    <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 4px;" style-hover="color:var(--sand);" onClick="{{ p.onDel }}">eliminar</button>
+                  </div>
+                </div>
+                <div style="margin-top:13px; height:6px; background:var(--surface2); border-radius:4px; overflow:hidden;">
+                  <div style="{{ p.progStyle }}"></div>
+                </div>
+              </div>
+            </sc-for>
+          </section>
+
+          <!-- DÉBITOS AUTOMÁTICOS -->
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px 28px 14px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px; gap:12px; flex-wrap:wrap;">
+              <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:15px;margin:0;letter-spacing:-0.2px;">Débitos automáticos</h2>
+              <span style="font-size:11.5px;color:var(--muted);">se cobran cada mes hasta darlos de baja</span>
+            </div>
+            <sc-for list="{{ debitsList }}" as="d" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 0; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+                <div style="flex:1; min-width:150px;">
+                  <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px; flex-wrap:wrap;">
+                    <span style="{{ d.nameStyle }}">{{ d.desc }}</span>
+                    <sc-if value="{{ d.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
+                    <span style="{{ d.statusStyle }}">{{ d.status }}</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);">{{ d.startLabel }}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:5px 10px;">
+                    <span style="color:var(--muted);font-family:'Space Grotesk';font-size:13px;">{{ d.sym }}</span>
+                    <input defaultValue="{{ d.amountVal }}" onChange="{{ d.onAmount }}" inputmode="decimal" style="width:82px;border:none;background:transparent;color:var(--text);font-family:'Space Grotesk';font-size:14.5px;text-align:right;font-feature-settings:'tnum';padding:3px 0;" />
+                    <span style="font-size:11px;color:var(--faint);">/mes</span>
+                  </div>
+                  <button style="{{ d.bajaStyle }}" onClick="{{ d.onBaja }}">{{ d.bajaLabel }}</button>
+                  <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:26px;" style-hover="color:var(--sand);" onClick="{{ d.onDel }}">×</button>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noDebits }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px 0 6px; color:var(--muted); font-size:13px;">Todavía no tenés débitos automáticos. Agregá uno con el botón “Nuevo”.</div>
+            </sc-if>
+          </section>
+
+        </div>
+      </sc-if>
+
+      <!-- ====== FIJOS ====== -->
+      <sc-if value="{{ isFijos }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px; animation:fadeIn .35s ease;">
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:8px 28px;">
+            <sc-for list="{{ fxList }}" as="f" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:16px; padding:15px 0; border-bottom:1px solid var(--border);">
+                <button style="{{ f.checkStyle }}" onClick="{{ f.onToggle }}">{{ f.check }}</button>
+                <div style="flex:1; min-width:0;">
+                  <div style="{{ f.nameStyle }}">{{ f.name }}</div>
+                  <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">{{ f.cat }}</div>
+                </div>
+                <span style="{{ f.amtStyle }}">{{ f.amount }}</span>
+                <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:28px;" style-hover="color:var(--sand);" onClick="{{ f.onDel }}">×</button>
+              </div>
+            </sc-for>
+            <div style="display:flex; align-items:center; gap:10px; padding:18px 0 20px; flex-wrap:wrap;">
+              <input value="{{ fxName }}" onChange="{{ onFxName }}" placeholder="Nuevo gasto fijo…" style="flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;" />
+              <input value="{{ fxAmount }}" onChange="{{ onFxAmount }}" placeholder="Monto" inputmode="numeric" style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Space Grotesk';" />
+              <button style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);border-radius:9px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;" onClick="{{ addFixed }}">Agregar</button>
+            </div>
+          </section>
+          <section data-glass style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--green-dim); border:1px solid var(--border); border-radius:16px; padding:22px 28px;">
+            <span style="font-size:14px;color:var(--text);font-weight:500;">Total de gastos fijos por mes</span>
+            <span style="font-family:'Space Grotesk';font-weight:600;font-size:24px;letter-spacing:-0.5px;color:var(--green);font-feature-settings:'tnum';">{{ fixedTotalFmt }}</span>
+          </section>
+        </div>
+      </sc-if>
+
+      <!-- ====== INGRESOS ====== -->
+      <sc-if value="{{ isIngresos }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px; animation:fadeIn .35s ease;">
+          <section data-glass style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:8px 28px;">
+            <sc-for list="{{ inList }}" as="i" hint-placeholder-count="3">
+              <div style="display:flex; align-items:center; gap:16px; padding:15px 0; border-bottom:1px solid var(--border);">
+                <button style="{{ i.checkStyle }}" onClick="{{ i.onToggle }}">{{ i.check }}</button>
+                <div style="flex:1; min-width:0; display:flex; align-items:center; gap:8px;">
+                  <span style="{{ i.nameStyle }}">{{ i.name }}</span>
+                  <sc-if value="{{ i.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
+                </div>
+                <span style="{{ i.amtStyle }}">{{ i.amount }}</span>
+                <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:28px;" style-hover="color:var(--sand);" onClick="{{ i.onDel }}">×</button>
+              </div>
+            </sc-for>
+            <div style="display:flex; align-items:center; gap:10px; padding:18px 0 20px; flex-wrap:wrap;">
+              <input value="{{ inName }}" onChange="{{ onInName }}" placeholder="Nuevo ingreso…" style="flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;" />
+              <input value="{{ inAmount }}" onChange="{{ onInAmount }}" placeholder="Monto" inputmode="decimal" style="width:110px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Space Grotesk';" />
+              <button style="{{ inCurBtnStyle }}" onClick="{{ toggleInCur }}">{{ inCurLabel }}</button>
+              <button style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);border-radius:9px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;" onClick="{{ addIncome }}">Agregar</button>
+            </div>
+          </section>
+          <section data-glass style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--green-dim); border:1px solid var(--border); border-radius:16px; padding:22px 28px;">
+            <span style="font-size:14px;color:var(--text);font-weight:500;">Ingresos por mes</span>
+            <div style="text-align:right;">
+              <div style="font-family:'Space Grotesk';font-weight:600;font-size:24px;letter-spacing:-0.5px;color:var(--green);font-feature-settings:'tnum';">{{ incomeArsFmt }}</div>
+              <sc-if value="{{ hasIncomeUsd }}" hint-placeholder-val="{{ false }}"><div style="font-family:'Space Grotesk';font-size:13px;color:var(--muted);font-feature-settings:'tnum';">+ {{ incomeUsdFmt }}</div></sc-if>
+            </div>
+          </section>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+
+  <!-- Scroll edge: vidrio superior que aparece al scrollear -->
+  <div ref="{{ scrollEdgeRef }}" style="position:absolute; top:0; left:0; right:0; height:108px; z-index:6; pointer-events:none; opacity:0; transition:opacity .25s ease; -webkit-backdrop-filter:blur(13px) saturate(1.35); backdrop-filter:blur(13px) saturate(1.35); -webkit-mask-image:linear-gradient(to bottom, #000 32%, transparent); mask-image:linear-gradient(to bottom, #000 32%, transparent);"></div>
+
+  <!-- Scrollbar fina propia -->
+  <div ref="{{ scrollThumbRef }}" style="position:absolute; right:3px; width:4px; border-radius:4px; background:var(--text); top:0; height:0; opacity:0; transition:opacity .35s ease; z-index:45; pointer-events:none;"></div>
+
+  <!-- FAB móvil (separado de la barra) -->
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <button style="{{ fabStyle }}" style-hover="transform:scale(1.06);" onClick="{{ openModal }}"><span style="font-size:34px;line-height:1;color:#ffffff;font-weight:700;display:block;margin-top:-4px;">+</span></button>
+  </sc-if>
+
+  <!-- ====== MODAL ====== -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; animation:fadeIn .2s ease;" onClick="{{ closeModal }}">
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:24px; width:440px; max-width:100%; max-height:92%; overflow-y:auto; box-shadow:0 16px 48px rgba(0,0,0,0.4); animation:popIn .24s ease;" onClick="{{ stop }}">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+          <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:19px;margin:0;letter-spacing:-0.3px;">Nuevo movimiento</h2>
+          <button style="background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;" onClick="{{ closeModal }}">×</button>
+        </div>
+
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;">Tipo</label>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button style="{{ kindCuotaStyle }}" onClick="{{ setKindCuota }}">En cuotas</button>
+          <button style="{{ kindDebitoStyle }}" onClick="{{ setKindDebito }}">Débito automático</button>
+        </div>
+
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;">Moneda</label>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button style="{{ curArsStyle }}" onClick="{{ setCurArs }}">Pesos $</button>
+          <button style="{{ curUsdStyle }}" onClick="{{ setCurUsd }}">Dólares US$</button>
+        </div>
+
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500;">Descripción</label>
+        <input value="{{ form.desc }}" onChange="{{ onDesc }}" placeholder="Ej. Notebook, Netflix…" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;margin-bottom:16px;" />
+
+        <sc-if value="{{ isCuota }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button style="{{ amtModeTotalStyle }}" onClick="{{ setAmtTotal }}">Monto total</button>
+            <button style="{{ amtModeCuotaStyle }}" onClick="{{ setAmtCuota }}">Valor de la cuota</button>
+          </div>
+        </sc-if>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500;">{{ montoLabel }}</label>
+        <div style="position:relative; margin-bottom:16px;">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:'Space Grotesk';font-size:14px;">{{ formSym }}</span>
+          <input value="{{ form.amount }}" onChange="{{ onAmount }}" placeholder="0" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px 12px 42px;color:var(--text);font-size:15px;font-family:'Space Grotesk';font-feature-settings:'tnum';" />
+        </div>
+
+        <div style="display:flex; gap:14px; margin-bottom:18px;">
+          <sc-if value="{{ isCuota }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;">
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500;">Cuotas</label>
+              <select value="{{ form.cuotas }}" onChange="{{ onCuotas }}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;cursor:pointer;">
+                <sc-for list="{{ cuotaOpts }}" as="o" hint-placeholder-count="7"><option value="{{ o.c }}">{{ o.label }}</option></sc-for>
+              </select>
+            </div>
+          </sc-if>
+          <div style="flex:1;">
+            <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500;">Mes de inicio</label>
+            <select value="{{ form.startIdx }}" onChange="{{ onStart }}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;cursor:pointer;text-transform:capitalize;">
+              <sc-for list="{{ monthOpts }}" as="o" hint-placeholder-count="9"><option value="{{ o.idx }}">{{ o.label }}</option></sc-for>
+            </select>
+          </div>
+        </div>
+
+        <div style="background:var(--sand-dim); border:1px solid var(--border); border-radius:11px; padding:13px 16px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <span style="font-size:12.5px;color:var(--muted);white-space:nowrap;">{{ previewLabel }}</span>
+          <span style="font-family:'Space Grotesk';font-weight:600;font-size:14px;color:var(--sand);font-feature-settings:'tnum';text-align:right;">{{ formPrev }}</span>
+        </div>
+
+        <div style="display:flex; gap:12px;">
+          <button style="flex:1;background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:11px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;" onClick="{{ closeModal }}">Cancelar</button>
+          <button style="{{ submitStyle }}" onClick="{{ submitForm }}">Registrar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ====== AJUSTES ====== -->
+  <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; animation:fadeIn .2s ease;" onClick="{{ closeSettings }}">
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:24px; width:380px; max-width:100%; box-shadow:0 16px 48px rgba(0,0,0,0.4); animation:popIn .24s ease;" onClick="{{ stop }}">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:19px;margin:0;letter-spacing:-0.3px;">Ajustes</h2>
+          <button style="background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;" onClick="{{ closeSettings }}">×</button>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;">Apariencia</span>
+          <span style="font-size:13px;color:var(--muted);">Sigue al sistema</span>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;">Mes en curso</span>
+          <span style="font-size:13px;color:var(--muted);text-transform:capitalize;">{{ monthLabel }}</span>
+        </div>
+        <button style="width:100%;margin-top:18px;background:transparent;border:1px solid var(--border2);color:var(--sand);border-radius:11px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;" style-hover="border-color:var(--sand);" onClick="{{ clearData }}">Borrar todos los datos</button>
+        <p style="margin:14px 0 0;font-size:11.5px;color:var(--faint);text-align:center;">Tus datos se guardan solo en este dispositivo.</p>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const ym = (y,m) => y*12+m;
+
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  mainRef = React.createRef();
+  scrollThumbRef = React.createRef();
+  scrollEdgeRef = React.createRef();
+  currentIdx = ym(2026,2); // Marzo 2026
+
+  themes = {
+    noche:  {'--bg':'#0f1115','--bg-grad':'radial-gradient(60% 50% at 85% 6%, rgba(125,211,160,0.14), transparent 60%), radial-gradient(55% 48% at 8% 94%, rgba(230,185,127,0.12), transparent 60%), linear-gradient(160deg, #141e27, #0b0d12)','--surface':'rgba(26,31,41,0.55)','--surface2':'rgba(38,44,57,0.5)','--elev':'rgba(44,51,65,0.62)','--border':'rgba(255,255,255,0.12)','--border2':'rgba(255,255,255,0.2)','--text':'#e9e7e1','--muted':'#9aa0ad','--faint':'#626875','--green':'#7dd3a0','--green-dim':'rgba(125,211,160,0.16)','--sand':'#e6b97f','--sand-dim':'rgba(230,185,127,0.16)','--shadow':'rgba(0,0,0,0.4)','--glass':'blur(22px) saturate(1.7)','--glass-shadow':'inset 0 1px 0 rgba(255,255,255,0.18), 0 14px 42px rgba(0,0,0,0.34)'},
+    papel:  {'--bg':'#ece8df','--bg-grad':'radial-gradient(60% 50% at 85% 6%, rgba(47,107,81,0.13), transparent 60%), radial-gradient(55% 48% at 6% 94%, rgba(178,122,55,0.13), transparent 60%), linear-gradient(160deg, #f3efe6, #e5dfd3)','--surface':'rgba(255,253,248,0.6)','--surface2':'rgba(255,255,255,0.48)','--elev':'rgba(255,255,255,0.72)','--border':'rgba(30,34,28,0.12)','--border2':'rgba(30,34,28,0.2)','--text':'#21261f','--muted':'#5f655b','--faint':'#9a9d91','--green':'#2f6b51','--green-dim':'rgba(47,107,81,0.13)','--sand':'#b27a37','--sand-dim':'rgba(178,122,55,0.14)','--shadow':'rgba(40,40,30,0.14)','--glass':'blur(20px) saturate(1.3)','--glass-shadow':'inset 0 1px 0 rgba(255,255,255,0.75), 0 12px 38px rgba(40,40,30,0.12)'},
+    carbon: {'--bg':'#070707','--bg-grad':'radial-gradient(60% 50% at 85% 6%, rgba(134,239,172,0.12), transparent 60%), radial-gradient(52% 46% at 8% 94%, rgba(216,196,160,0.08), transparent 60%), linear-gradient(160deg, #101012, #040404)','--surface':'rgba(20,20,23,0.55)','--surface2':'rgba(32,32,36,0.5)','--elev':'rgba(38,38,42,0.62)','--border':'rgba(255,255,255,0.14)','--border2':'rgba(255,255,255,0.22)','--text':'#f4f4f2','--muted':'#9a9a9a','--faint':'#565656','--green':'#86efac','--green-dim':'rgba(134,239,172,0.14)','--sand':'#d8c4a0','--sand-dim':'rgba(216,196,160,0.12)','--shadow':'rgba(0,0,0,0.65)','--glass':'blur(22px) saturate(1.6)','--glass-shadow':'inset 0 1px 0 rgba(255,255,255,0.16), 0 14px 42px rgba(0,0,0,0.5)'},
+  };
+
+  state = {
+    view: 'resumen',
+    theme: 'noche',
+    selectedIdx: ym(2026,2),
+    vw: (typeof window!=='undefined' ? window.innerWidth : 1200),
+    nextId: 300,
+    modalOpen: false, settingsOpen: false, rateOpen: false,
+    form: { kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx: ym(2026,2), amountMode:'total' },
+    fxName: '', fxAmount: '',
+    inName: '', inAmount: '', inCur:'ARS',
+    usdRate: 1300, rates: {},
+    fixed: [
+      {id:1, name:'Alquiler', cat:'Vivienda', amount:350000, active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:2, name:'Expensas', cat:'Vivienda', amount:85000, active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:3, name:'Luz y gas', cat:'Servicios', amount:28000, active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:4, name:'Internet', cat:'Servicios', amount:32000, active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:5, name:'Gimnasio', cat:'Salud', amount:25000, active:true, startIdx: ym(2024,0), endIdx:null},
+    ],
+    purchases: [
+      {id:1, desc:'Notebook Lenovo', total:1200000, cuotas:12, startIdx: ym(2026,0), currency:'ARS'},
+      {id:2, desc:'Heladera Samsung', total:720000, cuotas:6, startIdx: ym(2026,1), currency:'ARS'},
+      {id:3, desc:'Pasajes Bariloche', total:900000, cuotas:9, startIdx: ym(2026,2), currency:'ARS'},
+      {id:4, desc:'Zapatillas running', total:180000, cuotas:3, startIdx: ym(2026,2), currency:'ARS'},
+      {id:5, desc:'Sommier 2 plazas', total:480000, cuotas:6, startIdx: ym(2025,11), currency:'ARS'},
+      {id:6, desc:'Licencia Figma', total:120, cuotas:1, startIdx: ym(2026,2), currency:'USD'},
+    ],
+    debits: [
+      {id:1, desc:'Celular Personal', amount:18000, currency:'ARS', startIdx: ym(2025,0), endIdx:null},
+      {id:2, desc:'Netflix', amount:7500, currency:'ARS', startIdx: ym(2025,3), endIdx:null},
+      {id:3, desc:'Spotify', amount:5000, currency:'ARS', startIdx: ym(2025,6), endIdx:null},
+      {id:4, desc:'iCloud+', amount:2.99, currency:'USD', startIdx: ym(2025,0), endIdx:null},
+      {id:5, desc:'ChatGPT Plus', amount:20, currency:'USD', startIdx: ym(2025,8), endIdx:null},
+    ],
+    income: [
+      {id:1, name:'Sueldo', amount:1350000, currency:'ARS', active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:2, name:'Freelance', amount:300000, currency:'ARS', active:true, startIdx: ym(2024,0), endIdx:null},
+      {id:3, name:'Cliente exterior', amount:800, currency:'USD', active:true, startIdx: ym(2024,0), endIdx:null},
+    ],
+  };
+
+  componentDidMount(){
+    const measure = ()=>{ const el=this.rootRef.current; if(el && el.clientWidth) this.setState({vw: el.clientWidth}); };
+    this._ro = (typeof ResizeObserver!=='undefined') ? new ResizeObserver(measure) : null;
+    if(this._ro && this.rootRef.current) this._ro.observe(this.rootRef.current);
+    this._onResize = measure; window.addEventListener('resize', this._onResize);
+    requestAnimationFrame(measure); measure();
+    // Scrollbar fina propia, que sólo aparece al scrollear
+    const sc=this.mainRef.current, th=this.scrollThumbRef.current, te=this.scrollEdgeRef.current;
+    if(sc && th){
+      this._updThumb=()=>{
+        if(this.state.rateOpen) this.setState({rateOpen:false});
+        const sh=sc.scrollHeight, ch=sc.clientHeight, st=sc.scrollTop;
+        if(te) te.style.opacity = String(Math.min(1, st/26));
+        if(sh<=ch+2){ th.style.opacity='0'; return; }
+        const h=Math.max(28, ch/sh*ch);
+        const t=(st/(sh-ch))*(ch-h);
+        th.style.height=h+'px'; th.style.top=t+'px'; th.style.opacity='0.6';
+        clearTimeout(this._scH); this._scH=setTimeout(()=>{ try{ th.style.opacity='0'; }catch(e){} }, 700);
+      };
+      sc.addEventListener('scroll', this._updThumb, {passive:true});
+    }
+    this._onDocDown=(e)=>{ if(!this.state.rateOpen) return; const t=e.target; if(t && t.closest && (t.closest('[data-rate-pop]')||t.closest('[data-rate-btn]'))) return; this.setState({rateOpen:false}); };
+    document.addEventListener('pointerdown', this._onDocDown, true);
+    try{
+      const raw = localStorage.getItem('cuotas_v2');
+      if(raw){ const d = JSON.parse(raw);
+        this.setState({ fixed:d.fixed||this.state.fixed, purchases:d.purchases||this.state.purchases, debits:d.debits||this.state.debits, income:d.income||this.state.income, rates:d.rates||this.state.rates, usdRate:d.usdRate||this.state.usdRate, nextId:d.nextId||this.state.nextId });
+      }
+    }catch(e){}
+    // Tema según el sistema (claro/oscuro)
+    try{
+      this._mq = window.matchMedia('(prefers-color-scheme: dark)');
+      this._applySys = ()=>{ const t = this._mq.matches ? 'noche' : 'papel'; this.setState({theme:t}, ()=>this.applyTheme(t)); };
+      if(this._mq.addEventListener) this._mq.addEventListener('change', this._applySys);
+      else if(this._mq.addListener) this._mq.addListener(this._applySys);
+      this._applySys();
+    }catch(e){ this.applyTheme(this.state.theme); }
+  }
+  componentWillUnmount(){
+    if(this._onResize) window.removeEventListener('resize', this._onResize);
+    if(this._ro) this._ro.disconnect();
+    if(this._mq && this._applySys){ if(this._mq.removeEventListener) this._mq.removeEventListener('change', this._applySys); else if(this._mq.removeListener) this._mq.removeListener(this._applySys); }
+    if(this._updThumb && this.mainRef.current) this.mainRef.current.removeEventListener('scroll', this._updThumb);
+    if(this._onDocDown) document.removeEventListener('pointerdown', this._onDocDown, true);
+  }
+  componentDidUpdate(){
+    const s=this.state;
+    try{
+      const snap = JSON.stringify({ fixed:s.fixed, purchases:s.purchases, debits:s.debits, income:s.income, rates:s.rates, usdRate:s.usdRate, nextId:s.nextId, theme:s.theme });
+      if(snap!==this._lastSnap){ this._lastSnap = snap; localStorage.setItem('cuotas_v2', snap); }
+    }catch(e){}
+  }
+  applyTheme(name){
+    const el = this.rootRef.current; if(!el) return;
+    const t = this.themes[name];
+    Object.keys(t).forEach(k => el.style.setProperty(k, t[k]));
+  }
+
+  // helpers
+  mLong(i){ return MES[((i%12)+12)%12] + ' ' + Math.floor(i/12); }
+  mShort(i){ return MES3[((i%12)+12)%12]; }
+  yShort(i){ return String(Math.floor(i/12)).slice(2); }
+  fmt(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
+  fmtU(n){ const dec = Number.isInteger(n)?0:2; return 'US$\u00A0' + n.toLocaleString('es-AR',{minimumFractionDigits:dec, maximumFractionDigits:2}); }
+  money(n,cur){ return cur==='USD' ? this.fmtU(n) : this.fmt(n); }
+  fmtShort(n){ if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace('.',',')+'M'; return '$'+Math.round(n/1000)+'k'; }
+  parseAmount(str, cur){
+    let v = String(str).replace(/[^0-9.,]/g,'');
+    if(cur==='USD'){
+      v = v.replace(/,/g,'.');
+      const parts = v.split('.');
+      if(parts.length>2) v = parts[0]+'.'+parts.slice(1).join('');
+      return parseFloat(v)||0;
+    }
+    v = v.replace(/\./g,'').replace(/,/g,'.');
+    return parseFloat(v)||0;
+  }
+  cardItemsFor(idx){
+    return this.state.purchases
+      .filter(p => idx>=p.startIdx && idx<=p.startIdx+p.cuotas-1)
+      .map(p => ({p, amt:p.total/p.cuotas, n: idx-p.startIdx+1, cur:p.currency||'ARS'}));
+  }
+  debAmount(d, idx){
+    if(d.amounts && d.amounts.length){ let v=0; for(const a of d.amounts){ if(a.from<=idx) v=a.amount; } return v; }
+    return d.amount||0;
+  }
+  rate(idx){
+    const r=this.state.rates||{};
+    let bestK=null;
+    for(const k in r){ const ki=+k; if(ki<=idx && r[k]>0 && (bestK===null || ki>bestK)) bestK=ki; }
+    return bestK!==null ? r[bestK] : this.state.usdRate;
+  }
+  selIdx(){ const c=this.currentIdx; return Math.max(c-12, Math.min(c+12, this.state.selectedIdx)); }
+  activeAt(x, idx){ return x.active && idx>=(x.startIdx||0) && (x.endIdx==null || idx<=x.endIdx); }
+  debitItemsFor(idx){
+    return this.state.debits
+      .filter(d => idx>=d.startIdx && (d.endIdx==null || idx<=d.endIdx))
+      .map(d => ({d, amt:this.debAmount(d,idx), cur:d.currency||'ARS'}));
+  }
+
+  // mutations
+  setTheme(name){ this.setState({theme:name}, ()=>this.applyTheme(name)); }
+  delPurchase(id){ this.setState(s=>({purchases:s.purchases.filter(p=>p.id!==id)})); }
+  delDebit(id){ this.setState(s=>({debits:s.debits.filter(d=>d.id!==id)})); }
+  toggleBaja(id){ const sx=this.selIdx(); this.setState(s=>({debits:s.debits.map(d=>d.id===id?{...d, endIdx: d.endIdx==null ? sx : null}:d)})); }
+  setDebitAmount(id, val){
+    const cur=this.selIdx();
+    this.setState(s=>({debits:s.debits.map(d=>{
+      if(d.id!==id) return d;
+      const n=this.parseAmount(val, d.currency);
+      const base = (d.amounts && d.amounts.length) ? d.amounts.slice() : [{from:d.startIdx, amount:d.amount||0}];
+      const kept = base.filter(a=>a.from < cur);
+      kept.push({from: cur, amount: n});
+      kept.sort((a,b)=>a.from-b.from);
+      const nd={...d, amounts:kept}; delete nd.amount; return nd;
+    })}));
+  }
+  setRate(idx, val){ const n=this.parseAmount(val,'ARS'); this.setState(s=>({rates:{...s.rates, [idx]: n}})); }
+  toggleFixed(id){ this.setState(s=>({fixed:s.fixed.map(f=>f.id===id?{...f,active:!f.active}:f)})); }
+  delFixed(id){ this.setState(s=>({fixed:s.fixed.filter(f=>f.id!==id)})); }
+  setForm(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }
+  setView(v){ this.setState({view:v, _squish:true}); clearTimeout(this._sq); this._sq=setTimeout(()=>{ try{ this.setState({_squish:false}); }catch(e){} }, 280); }
+  openModal(){ this.setState({modalOpen:true, form:{kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx:this.selIdx(), amountMode:'total'}}); }
+  closeModal(){ this.setState({modalOpen:false}); }
+  submitForm(){
+    const f=this.state.form;
+    const amt=this.parseAmount(f.amount, f.currency);
+    if(!f.desc.trim() || amt<=0) return;
+    if(f.kind==='debito'){
+      this.setState(s=>({ debits:[...s.debits, {id:s.nextId, desc:f.desc.trim(), amount:amt, currency:f.currency, startIdx:f.startIdx, endIdx:null}], nextId:s.nextId+1, modalOpen:false, view:'tarjeta' }));
+    } else {
+      const total = (f.amountMode==='cuota') ? amt*f.cuotas : amt;
+      this.setState(s=>({ purchases:[...s.purchases, {id:s.nextId, desc:f.desc.trim(), total:total, cuotas:f.cuotas, startIdx:f.startIdx, currency:f.currency}], nextId:s.nextId+1, modalOpen:false, view:'tarjeta' }));
+    }
+  }
+  addFixed(){
+    const name=this.state.fxName.trim();
+    const amt=this.parseAmount(this.state.fxAmount, 'ARS');
+    if(!name || amt<=0) return;
+    const start=this.selIdx();
+    this.setState(s=>({ fixed:[...s.fixed,{id:s.nextId,name,cat:'Otros',amount:amt,active:true,startIdx:start,endIdx:null}], nextId:s.nextId+1, fxName:'', fxAmount:'' }));
+  }
+  toggleIncome(id){ this.setState(s=>({income:s.income.map(i=>i.id===id?{...i,active:!i.active}:i)})); }
+  delIncome(id){ this.setState(s=>({income:s.income.filter(i=>i.id!==id)})); }
+  addIncome(){ const name=this.state.inName.trim(); const amt=this.parseAmount(this.state.inAmount, this.state.inCur); if(!name||amt<=0) return; const start=this.selIdx(); this.setState(s=>({ income:[...s.income,{id:s.nextId,name,amount:amt,currency:s.inCur,active:true,startIdx:start,endIdx:null}], nextId:s.nextId+1, inName:'', inAmount:'' })); }
+
+  navStyle(on, m){
+    if(m) return {position:'relative',zIndex:'1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'3px',flex:'1',margin:'3px 2px',borderRadius:'999px',border:'none',background:'transparent',color:on?'var(--text)':'var(--muted)',fontSize:'10.5px',fontWeight:on?'600':'500',cursor:'pointer',padding:'0',transition:'color .25s ease, transform .2s cubic-bezier(.34,1.56,.64,1)'};
+    return {display:'flex',alignItems:'center',gap:'11px',padding:'10px 12px',borderRadius:'10px',cursor:'pointer',border:'1px solid '+(on?'var(--border2)':'transparent'),background:on?'var(--surface2)':'transparent',color:on?'var(--text)':'var(--muted)',fontSize:'14px',fontWeight:on?'600':'500',width:'100%',textAlign:'left',transition:'all .15s'};
+  }
+  swStyle(on){ return {width:'34px',height:'34px',borderRadius:'9px',border:'1px solid '+(on?'var(--green)':'var(--border)'),background:on?'var(--surface2)':'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0',transition:'all .15s'}; }
+  segStyle(on){ return {flex:'1',padding:'10px 8px',borderRadius:'9px',border:'1px solid '+(on?'var(--green)':'var(--border)'),background:on?'var(--green-dim)':'transparent',color:on?'var(--text)':'var(--muted)',fontWeight:on?'600':'500',fontSize:'13px',cursor:'pointer',transition:'all .15s'}; }
+
+  renderVals(){
+    const s=this.state;
+    const m = s.vw < 760;
+    const vi = s.view==='tarjeta' ? 1 : (s.view==='fijos' ? 2 : (s.view==='ingresos' ? 3 : 0));
+    const cur=this.currentIdx;
+    const sel=this.selIdx();
+
+    const fixedActive=s.fixed.filter(f=>this.activeAt(f, sel));
+    const fixedDirectTotal=fixedActive.reduce((a,f)=>a+f.amount,0);
+
+    const sumBy=(items,cur2)=>items.filter(x=>x.cur===cur2).reduce((a,x)=>a+x.amt,0);
+    const selCard=this.cardItemsFor(sel);
+    const selDeb=this.debitItemsFor(sel);
+    const cuotasARS=sumBy(selCard,'ARS'), cuotasUSD=sumBy(selCard,'USD');
+    const debARS=sumBy(selDeb,'ARS'), debUSD=sumBy(selDeb,'USD');
+    const cardARS=cuotasARS+debARS, cardUSD=cuotasUSD+debUSD;
+    const rSel=this.rate(sel);
+    const cardPesos=cardARS + cardUSD*rSel;
+    const totalARS=fixedDirectTotal+cardPesos;
+    const incActive=s.income.filter(i=>this.activeAt(i, sel));
+    const incomeARS=incActive.filter(i=>(i.currency||'ARS')!=='USD').reduce((a,i)=>a+i.amount,0);
+    const incomeUSD=incActive.filter(i=>i.currency==='USD').reduce((a,i)=>a+i.amount,0);
+    const incomePesos=incomeARS + incomeUSD*this.rate(sel);
+    const balanceARS=incomePesos-totalARS;
+
+    // forecast (ARS)
+    const fc=[];
+    for(let i=-1;i<5;i++){ const idx=cur+i;
+      const c=this.cardItemsFor(idx), d=this.debitItemsFor(idx);
+      const usd=sumBy(c,'USD')+sumBy(d,'USD');
+      const cardA=sumBy(c,'ARS')+sumBy(d,'ARS')+usd*this.rate(idx);
+      fc.push({idx, fixed:fixedDirectTotal, card:cardA, total:fixedDirectTotal+cardA, usd});
+    }
+    const maxT=Math.max(...fc.map(f=>f.total),1);
+    const H=148;
+    const forecast=fc.map(f=>{
+      const on=f.idx===sel;
+      const fijosPx=Math.max(f.fixed>0?3:0, Math.round(f.fixed/maxT*H));
+      const cardPx=Math.max(f.card>0?3:0, Math.round(f.card/maxT*H));
+      return {
+        key:'m'+f.idx, short:this.mShort(f.idx), totalShort:this.fmtShort(f.total),
+        usdNote: f.usd>0 ? 'US$'+Math.round(f.usd) : '',
+        onClick:()=>this.setState({selectedIdx:f.idx}),
+        cardStyle:{height:cardPx+'px',background:'var(--sand)',borderRadius:'5px 5px 0 0',opacity:on?1:0.5,transition:'opacity .2s'},
+        fijosStyle:{height:fijosPx+'px',background:'var(--green)',borderRadius:cardPx>0?'0':'5px 5px 0 0',marginTop:'2px',opacity:on?1:0.5,transition:'opacity .2s'},
+        labelStyle:{fontFamily:"'Space Grotesk'",fontSize: m?'9.5px':'12px',fontWeight:'600',color:on?'var(--text)':'var(--faint)',fontFeatureSettings:"'tnum'",transition:'color .2s'},
+        tickStyle:{fontSize: m?'10px':'12px',fontWeight:on?'600':'400',color:on?'var(--text)':'var(--muted)',textTransform:'capitalize',transition:'all .2s'},
+        usdStyle:{fontSize:'9.5px',fontWeight:'600',color: on?'var(--sand)':'var(--faint)',fontFamily:"'Space Grotesk'",minHeight:'12px'},
+      };
+    });
+
+    // card lines for selected month (resumen) — ARS first then USD, each desc
+    const lines = selCard.map(c=>({raw:c.amt, cur:c.cur, key:'c'+c.p.id, desc:c.p.desc, sub: c.p.cuotas>1 ? ('Cuota '+c.n+' de '+c.p.cuotas) : 'Pago único', dot:'var(--sand)'}))
+      .concat(selDeb.map(x=>({raw:x.amt, cur:x.cur, key:'d'+x.d.id, desc:x.d.desc, sub:'Débito automático', dot:'var(--green)'})));
+    const arsLines = lines.filter(l=>l.cur==='ARS').sort((a,b)=>b.raw-a.raw);
+    const usdLines = lines.filter(l=>l.cur==='USD').sort((a,b)=>b.raw-a.raw);
+    const cardLines = arsLines.concat(usdLines).map(l=>({
+      key:l.key, desc:l.desc, sub:l.sub, amount:this.money(l.raw,l.cur), isUSD:l.cur==='USD',
+      dotStyle:{width:'8px',height:'8px',borderRadius:'50%',background:l.dot,display:'block',flex:'none'}
+    }));
+
+    // purchases list (tarjeta view)
+    const pPurchases=s.purchases.slice().sort((a,b)=>b.startIdx-a.startIdx).map(p=>{
+      const cur2=p.currency||'ARS';
+      const last=p.startIdx+p.cuotas-1;
+      const n=sel-p.startIdx+1;
+      const one=p.cuotas===1;
+      let status, color, prog;
+      if(sel<p.startIdx){ status='Arranca '+this.mShort(p.startIdx); color='var(--muted)'; prog=0; }
+      else if(sel>last){ status='Saldada'; color='var(--green)'; prog=100; }
+      else if(one){ status='Pago único'; color='var(--sand)'; prog=100; }
+      else { status='Cuota '+n+' de '+p.cuotas; color='var(--sand)'; prog=Math.round(n/p.cuotas*100); }
+      const done=sel>last;
+      const sub = one
+        ? (this.money(p.total,cur2)+' · pago único · '+this.mShort(p.startIdx)+" '"+this.yShort(p.startIdx))
+        : (this.money(p.total,cur2)+' en '+p.cuotas+' cuotas · termina '+this.mShort(last)+" '"+this.yShort(last));
+      return {
+        key:'p'+p.id, desc:p.desc, status, isUSD:cur2==='USD',
+        monthly:this.money(p.total/p.cuotas,cur2), perMes: one?'':'/mes',
+        sub,
+        badgeStyle:{fontSize:'11px',fontWeight:'600',padding:'3px 9px',borderRadius:'20px',color:color,background:done?'var(--green-dim)':(cur<p.startIdx?'var(--surface2)':'var(--sand-dim)'),border:'1px solid var(--border)',whiteSpace:'nowrap'},
+        progStyle:{width:prog+'%',height:'100%',background:done?'var(--green)':'var(--sand)',borderRadius:'4px',transition:'width .4s ease'},
+        onDel:()=>this.delPurchase(p.id),
+      };
+    });
+
+    // saldo en cuotas (remaining installments from current month)
+    let saldoPesos=0, saldoUSD=0, activeCount=0;
+    s.purchases.forEach(p=>{
+      const cur2=p.currency||'ARS';
+      const last=p.startIdx+p.cuotas-1;
+      if(sel>=p.startIdx && sel<=last) activeCount++;
+      const cuo=p.total/p.cuotas;
+      const from=Math.max(sel, p.startIdx);
+      for(let idx=from; idx<=last; idx++){
+        if(cur2==='USD'){ saldoPesos += cuo*this.rate(idx); saldoUSD += cuo; }
+        else saldoPesos += cuo;
+      }
+    });
+    activeCount += selDeb.length;
+    const curUSD=cardUSD;
+    const curCardPesos=cardPesos;
+
+    // débitos automáticos list
+    const debitsList=s.debits.slice().sort((a,b)=>{ const ab=a.endIdx==null?0:1, bb=b.endIdx==null?0:1; return ab-bb || a.startIdx-b.startIdx; }).map(d=>{
+      const cur2=d.currency||'ARS';
+      const isBaja = d.endIdx!=null;
+      const future = d.startIdx>sel;
+      const ended = isBaja && sel>d.endIdx;
+      let status, sCol, sBg;
+      if(future){ status='Desde '+this.mShort(d.startIdx); sCol='var(--sand)'; sBg='var(--sand-dim)'; }
+      else if(ended){ status='Baja '+this.mShort(d.endIdx)+" '"+this.yShort(d.endIdx); sCol='var(--muted)'; sBg='var(--surface2)'; }
+      else { status='Activo'; sCol='var(--green)'; sBg='var(--green-dim)'; }
+      const baja=isBaja;
+      return {
+        key:'d'+d.id, desc:d.desc, isUSD:cur2==='USD', sym: cur2==='USD'?'US$':'$',
+        amountVal: this.debAmount(d, sel), onAmount:(e)=>this.setDebitAmount(d.id, e.target.value),
+        startLabel: (baja? 'Activo desde ' : 'Desde ')+this.mLong(d.startIdx),
+        status,
+        nameStyle:{fontSize:'14.5px',fontWeight:'600',color: baja?'var(--faint)':'var(--text)'},
+        statusStyle:{fontSize:'10.5px',fontWeight:'600',padding:'3px 9px',borderRadius:'20px',color:sCol,background:sBg,border:'1px solid var(--border)',whiteSpace:'nowrap'},
+        bajaLabel: baja?'Reactivar':'Dar de baja',
+        bajaStyle:{fontSize:'11.5px',fontWeight:'600',padding:'6px 11px',borderRadius:'8px',cursor:'pointer',whiteSpace:'nowrap',border:'1px solid '+(baja?'var(--green)':'var(--border2)'),background: baja?'var(--green-dim)':'transparent',color: baja?'var(--green)':'var(--muted)'},
+        onBaja:()=>this.toggleBaja(d.id), onDel:()=>this.delDebit(d.id),
+      };
+    });
+
+    // fixed list
+    const fxList=s.fixed.map(f=>({
+      key:'f'+f.id, name:f.name, cat:f.cat, amount:this.fmt(f.amount), check: f.active?'✓':'',
+      checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(f.active?'var(--green)':'var(--faint)'),background:f.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
+      nameStyle:{fontSize:'14px',fontWeight:'500',color:f.active?'var(--text)':'var(--faint)',textDecoration:f.active?'none':'line-through'},
+      amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:f.active?'var(--text)':'var(--faint)'},
+      onToggle:()=>this.toggleFixed(f.id), onDel:()=>this.delFixed(f.id),
+    }));
+
+    const inList=s.income.map(i=>{ const cur2=i.currency||'ARS'; return {
+      key:'in'+i.id, name:i.name, amount:this.money(i.amount,cur2), isUSD:cur2==='USD', check:i.active?'✓':'',
+      checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(i.active?'var(--green)':'var(--faint)'),background:i.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
+      nameStyle:{fontSize:'14px',fontWeight:'500',color:i.active?'var(--text)':'var(--faint)',textDecoration:i.active?'none':'line-through'},
+      amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:i.active?'var(--green)':'var(--faint)'},
+      onToggle:()=>this.toggleIncome(i.id), onDel:()=>this.delIncome(i.id),
+    };});
+
+    // modal / form
+    const f=s.form;
+    const isCuota=f.kind==='cuota';
+    const amtNum=this.parseAmount(f.amount, f.currency);
+    const formValid = f.desc.trim() && amtNum>0;
+    const amtMode=f.amountMode||'total';
+    let previewLabel = isCuota ? (amtMode==='cuota'?'Monto total':(f.cuotas>1?'Cuota mensual':'Total')) : 'Débito mensual';
+    let formPrev='—';
+    if(amtNum>0){
+      if(isCuota){
+        if(amtMode==='cuota'){
+          const total=amtNum*f.cuotas;
+          formPrev = f.cuotas>1 ? (this.money(total,f.currency)+' · '+f.cuotas+' cuotas') : (this.money(amtNum,f.currency)+' · pago único');
+        } else {
+          formPrev = f.cuotas>1
+            ? (this.money(amtNum/f.cuotas,f.currency)+' /mes · hasta '+this.mShort(f.startIdx+f.cuotas-1)+" '"+this.yShort(f.startIdx+f.cuotas-1))
+            : (this.money(amtNum,f.currency)+' · pago único');
+        }
+      } else {
+        formPrev = this.money(amtNum,f.currency)+' /mes · hasta darlo de baja';
+      }
+    }
+    const monthOpts=[]; for(let i=-6;i<=12;i++){ const idx=sel+i; monthOpts.push({key:'o'+idx, idx, label:this.mLong(idx)}); }
+    const cuotaOpts=[1,3,6,9,12,18,24].map(c=>({key:'q'+c, c, label: c===1?'1 pago':c+' cuotas'}));
+    const rateRows=[]; for(let i=0;i<6;i++){ const idx=sel+i; rateRows.push({ key:'rt'+idx, label:this.mLong(idx), rateVal:this.rate(idx), onRate:(e)=>this.setRate(idx, e.target.value) }); }
+
+    return {
+      rootRef:this.rootRef, mainRef:this.mainRef, scrollThumbRef:this.scrollThumbRef, scrollEdgeRef:this.scrollEdgeRef,
+      // responsive
+      isMobile:m,
+      asideStyle: m
+        ? {position:'absolute',left:'14px',right:'84px',bottom:'26px',zIndex:'40',height:'62px',borderRadius:'31px',border:'1px solid var(--border2)',background:'var(--surface)',backdropFilter:'blur(32px) saturate(2.1)',WebkitBackdropFilter:'blur(32px) saturate(2.1)',boxShadow:'inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 1px rgba(255,255,255,0.04), 0 12px 36px rgba(0,0,0,0.32)',display:'flex',flexDirection:'row',alignItems:'stretch',padding:'0 4px'}
+        : {width:'236px',flex:'none',borderRight:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',padding:'24px 18px'},
+      brandStyle: m ? {display:'none'} : {display:'flex',alignItems:'center',gap:'11px',padding:'0 6px 26px'},
+      navWrapStyle: m ? {position:'relative',display:'flex',flexDirection:'row',flex:'1',gap:'0'} : {display:'flex',flexDirection:'column',gap:'5px'},
+      pillStyle: {position:'absolute',top:'4px',bottom:'4px',left:'calc('+vi+' * 25% + 2px)',width:'calc(25% - 4px)',borderRadius:'999px',background:'linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.03)), color-mix(in srgb, var(--green) 36%, transparent)',border:'1px solid rgba(255,255,255,0.24)',backdropFilter:'blur(5px) saturate(1.5)',WebkitBackdropFilter:'blur(5px) saturate(1.5)',boxShadow:'0 5px 13px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.22), inset 0 1.5px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.07)',transformOrigin:'center',transform: s._squish ? 'scaleX(1.13) scaleY(1.05)' : 'scaleX(1) scaleY(1)',transition:'left .5s cubic-bezier(.34,1.56,.64,1), transform .28s ease',zIndex:'0',pointerEvents:'none'},
+      themeWrapStyle: m ? {display:'none'} : {marginTop:'auto',display:'flex',flexDirection:'column',gap:'12px'},
+      mainInnerStyle: {maxWidth:'1000px',margin:'0 auto',padding: m?'14px 15px 100px':'34px 40px 60px'},
+      headerStyle: {display:'flex',alignItems:'center',justifyContent:'space-between',gap:'12px',flexWrap:'wrap',marginBottom: m?'20px':'30px',minHeight:'40px'},
+      newBtnStyle: m ? {display:'none'} : {display:'flex',alignItems:'center',gap:'7px',background:'var(--green)',color:'#0f1115',border:'none',borderRadius:'10px',padding:'11px 18px',fontSize:'14px',fontWeight:'600',cursor:'pointer',boxShadow:'0 2px 10px var(--green-dim)',transition:'transform .12s'},
+      fabStyle: {position:'absolute',right:'14px',bottom:'26px',zIndex:'41',width:'62px',height:'62px',flex:'none',borderRadius:'50%',background:'radial-gradient(circle at 50% 32%, rgba(255,255,255,0.16), rgba(255,255,255,0) 58%), linear-gradient(180deg, color-mix(in srgb, var(--green) 92%, white), color-mix(in srgb, var(--green) 84%, black))',border:'1px solid rgba(255,255,255,0.14)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 7px 18px rgba(0,0,0,0.32), 0 2px 5px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.22), inset 0 -2px 5px rgba(0,0,0,0.16)',transition:'transform .14s ease'},
+      heroCardStyle: {position:'relative',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'18px',padding: m?'22px':'30px 32px',display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:'24px'},
+      heroNumStyle: {fontFamily:"'Space Grotesk'",fontWeight:'600',fontSize: m?'38px':'54px',lineHeight:'1',letterSpacing:'-1.5px',fontFeatureSettings:"'tnum'"},
+      statsGridStyle: {display:'grid',gridTemplateColumns: m?'1fr':'repeat(3,1fr)',gap: m?'10px':'16px'},
+      iconStyle: m ? {fontSize:'31px',width:'33px',textAlign:'center',lineHeight:'1',marginTop:'-3px'} : {fontSize:'15px',width:'18px',textAlign:'center'},
+      iconStyleIng: m ? {fontSize:'27px',width:'30px',textAlign:'center',lineHeight:'1',marginTop:'-3px'} : {fontSize:'15px',width:'18px',textAlign:'center'},
+      // nav
+      isResumen:s.view==='resumen', isTarjeta:s.view==='tarjeta', isFijos:s.view==='fijos',
+      goResumen:()=>this.setView('resumen'), goTarjeta:()=>this.setView('tarjeta'), goFijos:()=>this.setView('fijos'),
+      navRes:this.navStyle(s.view==='resumen', m), navTar:this.navStyle(s.view==='tarjeta', m), navFij:this.navStyle(s.view==='fijos', m),
+      // theme
+      setNoche:()=>this.setTheme('noche'), setPapel:()=>this.setTheme('papel'), setCarbon:()=>this.setTheme('carbon'),
+      swNoche:this.swStyle(s.theme==='noche'), swPapel:this.swStyle(s.theme==='papel'), swCarbon:this.swStyle(s.theme==='carbon'),
+      // month nav
+      monthLabel:this.mLong(sel),
+      viewTitle: ({resumen:'Resumen', tarjeta:'Tarjeta de crédito', fijos:'Gastos fijos', ingresos:'Ingresos'})[s.view] || 'Resumen',
+      prev:()=>this.setState(()=>({selectedIdx:Math.max(cur-12, sel-1)})),
+      next:()=>this.setState(()=>({selectedIdx:Math.min(cur+12, sel+1)})),
+      // resumen
+      monthTotal:this.fmt(totalARS), monthUsd:this.fmtU(cardUSD), hasMonthUsd: cardUSD>0, rateSelFmt:this.fmt(rSel),
+      fixedDirectFmt:this.fmt(fixedDirectTotal),
+      cardArsFmt:this.fmt(cardPesos), cardUsdFmt:this.fmtU(cardUSD), hasCardUsd: cardUSD>0,
+      cuotaCount:selCard.length, debitCount:selDeb.length,
+      forecast, cardLines, hasCuotas:cardLines.length>0, noCuotas:cardLines.length===0,
+      // tarjeta
+      pPurchases, debitsList, noDebits:debitsList.length===0, rateRows, curRateFmt:this.fmt(this.rate(sel)),
+      rateSelVal:this.rate(sel), onRateSel:(e)=>this.setRate(sel, e.target.value),
+      prevRateLabel:this.mLong(sel-1), prevRateFmt:this.fmt(this.rate(sel-1)),
+      rateOpen:s.rateOpen, toggleRate:()=>this.setState(st=>({rateOpen:!st.rateOpen})),
+      dollarBtnStyle:{alignSelf:'flex-start',marginTop:'-6px',marginRight:'-6px',width:'36px',height:'36px',borderRadius:'10px',border:'1px solid '+(s.rateOpen?'var(--green)':'var(--border2)'),background: s.rateOpen?'var(--green-dim)':'var(--surface2)',color: s.rateOpen?'var(--green)':'var(--text)',fontFamily:"'Space Grotesk'",fontWeight:'700',fontSize:'17px',cursor:'pointer',flex:'none',transition:'all .15s'},
+      curCardArsFmt:this.fmt(curCardPesos), curCardUsdFmt:this.fmtU(curUSD), hasCurUsd: curUSD>0,
+      activeCount,
+      saldoFmt:this.fmt(saldoPesos), saldoUsdFmt:this.fmtU(saldoUSD), hasSaldoUsd: saldoUSD>0,
+      // fijos
+      fxList, fxName:s.fxName, fxAmount:s.fxAmount, fixedTotalFmt:this.fmt(fixedDirectTotal),
+      onFxName:(e)=>this.setState({fxName:e.target.value}), onFxAmount:(e)=>this.setState({fxAmount:e.target.value}),
+      addFixed:()=>this.addFixed(),
+      // ingresos
+      isIngresos:s.view==='ingresos', goIngresos:()=>this.setView('ingresos'), navIng:this.navStyle(s.view==='ingresos', m),
+      labFijos: m?'Fijos':'Gastos fijos',
+      balanceFmt: (balanceARS>=0?'+ ':'− ')+this.fmt(Math.abs(balanceARS)),
+      balanceStyle: {fontFamily:"'Space Grotesk'",fontWeight:'600',fontSize:'14px',fontFeatureSettings:"'tnum'",color: balanceARS>=0?'var(--green)':'var(--sand)'},
+      incomeArsFmt:this.fmt(incomeARS), incomeUsdFmt:this.fmtU(incomeUSD), hasIncomeUsd: incomeUSD>0,
+      inList, inName:s.inName, inAmount:s.inAmount,
+      onInName:(e)=>this.setState({inName:e.target.value}), onInAmount:(e)=>this.setState({inAmount:e.target.value}),
+      inCurLabel: s.inCur==='USD'?'US$':'Pesos $',
+      inCurBtnStyle:{fontSize:'12.5px',fontWeight:'600',padding:'11px 14px',borderRadius:'9px',cursor:'pointer',whiteSpace:'nowrap',border:'1px solid '+(s.inCur==='USD'?'var(--sand)':'var(--border2)'),color:s.inCur==='USD'?'var(--sand)':'var(--muted)',background:s.inCur==='USD'?'var(--sand-dim)':'transparent'},
+      toggleInCur:()=>this.setState(st=>({inCur: st.inCur==='USD'?'ARS':'USD'})),
+      addIncome:()=>this.addIncome(),
+      // modal
+      modalOpen:s.modalOpen, openModal:()=>this.openModal(), closeModal:()=>this.closeModal(), stop:(e)=>e.stopPropagation(),
+      settingsOpen:s.settingsOpen, openSettings:()=>this.setState({settingsOpen:true}), closeSettings:()=>this.setState({settingsOpen:false}),
+      clearData:()=>this.setState({fixed:[],purchases:[],debits:[],income:[],settingsOpen:false}),
+      form:f, isCuota,
+      kindCuotaStyle:this.segStyle(isCuota), kindDebitoStyle:this.segStyle(!isCuota),
+      setKindCuota:()=>this.setForm('kind','cuota'), setKindDebito:()=>this.setForm('kind','debito'),
+      curArsStyle:this.segStyle(f.currency==='ARS'), curUsdStyle:this.segStyle(f.currency==='USD'),
+      setCurArs:()=>this.setForm('currency','ARS'), setCurUsd:()=>this.setForm('currency','USD'),
+      montoLabel: isCuota?(amtMode==='cuota'?'Valor de la cuota':'Monto total'):'Monto mensual', formSym: f.currency==='USD'?'US$':'$',
+      amtModeTotalStyle:this.segStyle(amtMode==='total'), amtModeCuotaStyle:this.segStyle(amtMode==='cuota'),
+      setAmtTotal:()=>this.setForm('amountMode','total'), setAmtCuota:()=>this.setForm('amountMode','cuota'),
+      previewLabel,
+      onDesc:(e)=>this.setForm('desc',e.target.value),
+      onAmount:(e)=>this.setForm('amount',e.target.value),
+      onCuotas:(e)=>this.setForm('cuotas',parseInt(e.target.value,10)),
+      onStart:(e)=>this.setForm('startIdx',parseInt(e.target.value,10)),
+      cuotaOpts, monthOpts, formPrev,
+      submitForm:()=>this.submitForm(),
+      submitStyle:{flex:'2',background: formValid?'var(--green)':'var(--surface2)',color: formValid?'#0f1115':'var(--faint)',border:'none',borderRadius:'11px',padding:'13px',fontSize:'14px',fontWeight:'600',cursor: formValid?'pointer':'not-allowed',transition:'all .15s'},
+    };
+  }
+}
+</script>
+</body>
+</html>
