@@ -270,7 +270,7 @@
                 <div style="display:flex; align-items:center; gap:9px;">
                   <div style="display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:5px 10px;">
                     <span style="color:var(--muted);font-family:'Space Grotesk';font-size:13px;">{{ d.sym }}</span>
-                    <input defaultValue="{{ d.amountVal }}" onChange="{{ d.onAmount }}" inputmode="decimal" style="width:82px;border:none;background:transparent;color:var(--text);font-family:'Space Grotesk';font-size:14.5px;text-align:right;font-feature-settings:'tnum';padding:3px 0;" />
+                    <input value="{{ d.amountVal }}" onChange="{{ d.onAmount }}" inputmode="decimal" style="width:82px;border:none;background:transparent;color:var(--text);font-family:'Space Grotesk';font-size:16px;text-align:right;font-feature-settings:'tnum';padding:3px 0;" />
                     <span style="font-size:11px;color:var(--faint);">/mes</span>
                   </div>
                   <button style="{{ d.bajaStyle }}" onClick="{{ d.onBaja }}">{{ d.bajaLabel }}</button>
@@ -300,7 +300,10 @@
                   </div>
                   <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">{{ f.cat }}</div>
                 </div>
-                <span style="{{ f.amtStyle }}">{{ f.amount }}</span>
+                <div style="display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:5px 10px; flex:none;">
+                  <span style="color:var(--muted);font-family:'Space Grotesk';font-size:12.5px;">{{ f.sym }}</span>
+                  <input value="{{ f.amountVal }}" onChange="{{ f.onAmount }}" inputmode="decimal" style="width:88px;border:none;background:transparent;color:var(--text);font-family:'Space Grotesk';font-size:16px;text-align:right;font-feature-settings:'tnum';padding:2px 0;" />
+                </div>
                 <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:28px;" style-hover="color:var(--sand);" onClick="{{ f.onDel }}">×</button>
               </div>
             </sc-for>
@@ -330,7 +333,10 @@
                   <sc-if value="{{ i.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
                   <sc-if value="{{ i.once }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">una vez</span></sc-if>
                 </div>
-                <span style="{{ i.amtStyle }}">{{ i.amount }}</span>
+                <div style="display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:5px 10px; flex:none;">
+                  <span style="color:var(--muted);font-family:'Space Grotesk';font-size:12.5px;">{{ i.sym }}</span>
+                  <input value="{{ i.amountVal }}" onChange="{{ i.onAmount }}" inputmode="decimal" style="width:84px;border:none;background:transparent;color:var(--green);font-family:'Space Grotesk';font-size:16px;text-align:right;font-feature-settings:'tnum';padding:2px 0;" />
+                </div>
                 <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:28px;" style-hover="color:var(--sand);" onClick="{{ i.onDel }}">×</button>
               </div>
             </sc-for>
@@ -469,7 +475,7 @@
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const ym = (y,m) => y*12+m;
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.3';
 
 class Component extends DCLogic {
   rootRef = React.createRef();
@@ -654,18 +660,16 @@ class Component extends DCLogic {
   delPurchase(id){ this.setState(s=>({purchases:s.purchases.filter(p=>p.id!==id)})); }
   delDebit(id){ this.setState(s=>({debits:s.debits.filter(d=>d.id!==id)})); }
   toggleBaja(id){ const sx=this.selIdx(); this.setState(s=>({debits:s.debits.map(d=>d.id===id?{...d, endIdx: d.endIdx==null ? sx : null}:d)})); }
-  setDebitAmount(id, val){
-    const cur=this.selIdx();
-    this.setState(s=>({debits:s.debits.map(d=>{
-      if(d.id!==id) return d;
-      const n=this.parseAmount(val, d.currency);
-      const base = (d.amounts && d.amounts.length) ? d.amounts.slice() : [{from:d.startIdx, amount:d.amount||0}];
-      const kept = base.filter(a=>a.from < cur);
-      kept.push({from: cur, amount: n});
-      kept.sort((a,b)=>a.from-b.from);
-      const nd={...d, amounts:kept}; delete nd.amount; return nd;
-    })}));
+  applyForward(item, idx, n){
+    const base = (item.amounts && item.amounts.length) ? item.amounts.slice() : [{from:item.startIdx, amount:item.amount||0}];
+    const kept = base.filter(a=>a.from < idx);
+    kept.push({from: idx, amount: n});
+    kept.sort((a,b)=>a.from-b.from);
+    const it={...item, amounts:kept}; delete it.amount; return it;
   }
+  setDebitAmount(id, val){ const sx=this.selIdx(); this.setState(s=>({debits:s.debits.map(d=>d.id===id ? this.applyForward(d, sx, this.parseAmount(val, d.currency)) : d)})); }
+  setFixedAmount(id, val){ const sx=this.selIdx(); this.setState(s=>({fixed:s.fixed.map(f=>f.id===id ? this.applyForward(f, sx, this.parseAmount(val,'ARS')) : f)})); }
+  setIncomeAmount(id, val){ const sx=this.selIdx(); this.setState(s=>({income:s.income.map(i=>i.id===id ? this.applyForward(i, sx, this.parseAmount(val, i.currency)) : i)})); }
   setRate(idx, val){ const n=this.parseAmount(val,'ARS'); this.setState(s=>({rates:{...s.rates, [idx]: n}})); }
   toggleFixed(id){ this.setState(s=>({fixed:s.fixed.map(f=>f.id===id?{...f,active:!f.active}:f)})); }
   delFixed(id){ this.setState(s=>({fixed:s.fixed.filter(f=>f.id!==id)})); }
@@ -717,7 +721,7 @@ class Component extends DCLogic {
     const sel=this.selIdx();
 
     const fixedActive=s.fixed.filter(f=>this.activeAt(f, sel));
-    const fixedDirectTotal=fixedActive.reduce((a,f)=>a+f.amount,0);
+    const fixedDirectTotal=fixedActive.reduce((a,f)=>a+this.debAmount(f, sel),0);
 
     const sumBy=(items,cur2)=>items.filter(x=>x.cur===cur2).reduce((a,x)=>a+x.amt,0);
     const selCard=this.cardItemsFor(sel);
@@ -729,8 +733,8 @@ class Component extends DCLogic {
     const cardPesos=cardARS + cardUSD*rSel;
     const totalARS=fixedDirectTotal+cardPesos;
     const incActive=s.income.filter(i=>this.activeAt(i, sel));
-    const incomeARS=incActive.filter(i=>(i.currency||'ARS')!=='USD').reduce((a,i)=>a+i.amount,0);
-    const incomeUSD=incActive.filter(i=>i.currency==='USD').reduce((a,i)=>a+i.amount,0);
+    const incomeARS=incActive.filter(i=>(i.currency||'ARS')!=='USD').reduce((a,i)=>a+this.debAmount(i, sel),0);
+    const incomeUSD=incActive.filter(i=>i.currency==='USD').reduce((a,i)=>a+this.debAmount(i, sel),0);
     const incomePesos=incomeARS + incomeUSD*this.rate(sel);
     const balanceARS=incomePesos-totalARS;
 
@@ -838,7 +842,7 @@ class Component extends DCLogic {
 
     // fixed list
     const fxList=s.fixed.map(f=>({
-      key:'f'+f.id, name:f.name, cat:f.cat, amount:this.fmt(f.amount), check: f.active?'✓':'', once: (f.endIdx!=null && f.endIdx===f.startIdx),
+      key:'f'+f.id, name:f.name, cat:f.cat, amountVal:this.debAmount(f, sel), sym:'$', onAmount:(e)=>this.setFixedAmount(f.id, e.target.value), check: f.active?'✓':'', once: (f.endIdx!=null && f.endIdx===f.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(f.active?'var(--green)':'var(--faint)'),background:f.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:f.active?'var(--text)':'var(--faint)',textDecoration:f.active?'none':'line-through'},
       amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:f.active?'var(--text)':'var(--faint)'},
@@ -846,7 +850,7 @@ class Component extends DCLogic {
     }));
 
     const inList=s.income.map(i=>{ const cur2=i.currency||'ARS'; return {
-      key:'in'+i.id, name:i.name, amount:this.money(i.amount,cur2), isUSD:cur2==='USD', check:i.active?'✓':'', once: (i.endIdx!=null && i.endIdx===i.startIdx),
+      key:'in'+i.id, name:i.name, amountVal:this.debAmount(i, sel), sym: cur2==='USD'?'US$':'$', onAmount:(e)=>this.setIncomeAmount(i.id, e.target.value), isUSD:cur2==='USD', check:i.active?'✓':'', once: (i.endIdx!=null && i.endIdx===i.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(i.active?'var(--green)':'var(--faint)'),background:i.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:i.active?'var(--text)':'var(--faint)',textDecoration:i.active?'none':'line-through'},
       amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:i.active?'var(--green)':'var(--faint)'},
@@ -884,7 +888,7 @@ class Component extends DCLogic {
       // responsive
       isMobile:m,
       asideStyle: m
-        ? {position:'absolute',left:'14px',right:'84px',bottom:'26px',zIndex:'40',height:'62px',borderRadius:'31px',border:'1px solid var(--border2)',background:'color-mix(in srgb, var(--surface) 52%, transparent)',backdropFilter:'blur(34px) saturate(2.1)',WebkitBackdropFilter:'blur(34px) saturate(2.1)',boxShadow:'inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 1px rgba(255,255,255,0.04), 0 12px 36px rgba(0,0,0,0.32)',display:'flex',flexDirection:'row',alignItems:'stretch',padding:'0 4px'}
+        ? {position:'absolute',left:'14px',right:'84px',bottom:'26px',zIndex:'40',height:'62px',borderRadius:'31px',border:'1px solid var(--border2)',background:'color-mix(in srgb, var(--surface) 38%, transparent)',backdropFilter:'blur(14px) saturate(1.5)',WebkitBackdropFilter:'blur(14px) saturate(1.5)',boxShadow:'inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 1px rgba(255,255,255,0.04), 0 12px 36px rgba(0,0,0,0.32)',display:'flex',flexDirection:'row',alignItems:'stretch',padding:'0 4px'}
         : {width:'236px',flex:'none',borderRight:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',padding:'24px 18px'},
       brandStyle: m ? {display:'none'} : {display:'flex',alignItems:'center',gap:'11px',padding:'0 6px 26px'},
       navWrapStyle: m ? {position:'relative',display:'flex',flexDirection:'row',flex:'1',gap:'0'} : {display:'flex',flexDirection:'column',gap:'5px'},
