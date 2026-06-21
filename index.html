@@ -294,7 +294,10 @@
               <div style="display:flex; align-items:center; gap:16px; padding:15px 0; border-bottom:1px solid var(--border);">
                 <button style="{{ f.checkStyle }}" onClick="{{ f.onToggle }}">{{ f.check }}</button>
                 <div style="flex:1; min-width:0;">
-                  <div style="{{ f.nameStyle }}">{{ f.name }}</div>
+                  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+                    <span style="{{ f.nameStyle }}">{{ f.name }}</span>
+                    <sc-if value="{{ f.once }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:2px 7px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">una vez</span></sc-if>
+                  </div>
                   <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">{{ f.cat }}</div>
                 </div>
                 <span style="{{ f.amtStyle }}">{{ f.amount }}</span>
@@ -302,13 +305,14 @@
               </div>
             </sc-for>
             <div style="display:flex; align-items:center; gap:10px; padding:18px 0 20px; flex-wrap:wrap;">
-              <input value="{{ fxName }}" onChange="{{ onFxName }}" placeholder="Nuevo gasto fijo…" style="flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;" />
-              <input value="{{ fxAmount }}" onChange="{{ onFxAmount }}" placeholder="Monto" inputmode="numeric" style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Space Grotesk';" />
+              <input value="{{ fxName }}" onChange="{{ onFxName }}" placeholder="Nuevo gasto…" style="flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;" />
+              <input value="{{ fxAmount }}" onChange="{{ onFxAmount }}" placeholder="Monto" inputmode="numeric" style="width:110px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Space Grotesk';" />
+              <button style="{{ fxOnceBtnStyle }}" onClick="{{ toggleFxOnce }}">{{ fxOnceLabel }}</button>
               <button style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);border-radius:9px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;" onClick="{{ addFixed }}">Agregar</button>
             </div>
           </section>
           <section data-glass style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; background:var(--green-dim); border:1px solid var(--border); border-radius:16px; padding:22px 28px;">
-            <span style="font-size:14px;color:var(--text);font-weight:500;">Total de gastos fijos por mes</span>
+            <span style="font-size:14px;color:var(--text);font-weight:500;">Total de gastos del mes</span>
             <span style="font-family:'Space Grotesk';font-weight:600;font-size:24px;letter-spacing:-0.5px;color:var(--green);font-feature-settings:'tnum';">{{ fixedTotalFmt }}</span>
           </section>
         </div>
@@ -324,6 +328,7 @@
                 <div style="flex:1; min-width:0; display:flex; align-items:center; gap:8px;">
                   <span style="{{ i.nameStyle }}">{{ i.name }}</span>
                   <sc-if value="{{ i.isUSD }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">US$</span></sc-if>
+                  <sc-if value="{{ i.once }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--sand-dim);color:var(--sand);">una vez</span></sc-if>
                 </div>
                 <span style="{{ i.amtStyle }}">{{ i.amount }}</span>
                 <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px;width:28px;" style-hover="color:var(--sand);" onClick="{{ i.onDel }}">×</button>
@@ -333,6 +338,7 @@
               <input value="{{ inName }}" onChange="{{ onInName }}" placeholder="Nuevo ingreso…" style="flex:1;min-width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;" />
               <input value="{{ inAmount }}" onChange="{{ onInAmount }}" placeholder="Monto" inputmode="decimal" style="width:110px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Space Grotesk';" />
               <button style="{{ inCurBtnStyle }}" onClick="{{ toggleInCur }}">{{ inCurLabel }}</button>
+              <button style="{{ inOnceBtnStyle }}" onClick="{{ toggleInOnce }}">{{ inOnceLabel }}</button>
               <button style="background:var(--green-dim);color:var(--green);border:1px solid var(--green);border-radius:9px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;" onClick="{{ addIncome }}">Agregar</button>
             </div>
           </section>
@@ -487,8 +493,8 @@ class Component extends DCLogic {
     nextId: 300,
     modalOpen: false, settingsOpen: false, rateOpen: false, editingId: null,
     form: { kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx: ym(2026,2), amountMode:'total' },
-    fxName: '', fxAmount: '',
-    inName: '', inAmount: '', inCur:'ARS',
+    fxName: '', fxAmount: '', fxOnce:false,
+    inName: '', inAmount: '', inCur:'ARS', inOnce:false,
     usdRate: 1300, rates: {},
     fixed: [
       {id:1, name:'Alquiler', cat:'Vivienda', amount:350000, active:true, startIdx: ym(2024,0), endIdx:null},
@@ -689,12 +695,12 @@ class Component extends DCLogic {
     const name=this.state.fxName.trim();
     const amt=this.parseAmount(this.state.fxAmount, 'ARS');
     if(!name || amt<=0) return;
-    const start=this.selIdx();
-    this.setState(s=>({ fixed:[...s.fixed,{id:s.nextId,name,cat:'Otros',amount:amt,active:true,startIdx:start,endIdx:null}], nextId:s.nextId+1, fxName:'', fxAmount:'' }));
+    const start=this.selIdx(); const once=this.state.fxOnce;
+    this.setState(s=>({ fixed:[...s.fixed,{id:s.nextId,name,cat: once?'Una vez':'Mensual',amount:amt,active:true,startIdx:start,endIdx: once?start:null}], nextId:s.nextId+1, fxName:'', fxAmount:'', fxOnce:false }));
   }
   toggleIncome(id){ this.setState(s=>({income:s.income.map(i=>i.id===id?{...i,active:!i.active}:i)})); }
   delIncome(id){ this.setState(s=>({income:s.income.filter(i=>i.id!==id)})); }
-  addIncome(){ const name=this.state.inName.trim(); const amt=this.parseAmount(this.state.inAmount, this.state.inCur); if(!name||amt<=0) return; const start=this.selIdx(); this.setState(s=>({ income:[...s.income,{id:s.nextId,name,amount:amt,currency:s.inCur,active:true,startIdx:start,endIdx:null}], nextId:s.nextId+1, inName:'', inAmount:'' })); }
+  addIncome(){ const name=this.state.inName.trim(); const amt=this.parseAmount(this.state.inAmount, this.state.inCur); if(!name||amt<=0) return; const start=this.selIdx(); const once=this.state.inOnce; this.setState(s=>({ income:[...s.income,{id:s.nextId,name,amount:amt,currency:s.inCur,active:true,startIdx:start,endIdx: once?start:null}], nextId:s.nextId+1, inName:'', inAmount:'', inOnce:false })); }
 
   navStyle(on, m){
     if(m) return {position:'relative',zIndex:'1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'3px',flex:'1',margin:'3px 2px',borderRadius:'999px',border:'none',background:'transparent',color:on?'var(--text)':'var(--muted)',fontSize:'10.5px',fontWeight:on?'600':'500',cursor:'pointer',padding:'0',transition:'color .25s ease, transform .2s cubic-bezier(.34,1.56,.64,1)'};
@@ -832,7 +838,7 @@ class Component extends DCLogic {
 
     // fixed list
     const fxList=s.fixed.map(f=>({
-      key:'f'+f.id, name:f.name, cat:f.cat, amount:this.fmt(f.amount), check: f.active?'✓':'',
+      key:'f'+f.id, name:f.name, cat:f.cat, amount:this.fmt(f.amount), check: f.active?'✓':'', once: (f.endIdx!=null && f.endIdx===f.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(f.active?'var(--green)':'var(--faint)'),background:f.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:f.active?'var(--text)':'var(--faint)',textDecoration:f.active?'none':'line-through'},
       amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:f.active?'var(--text)':'var(--faint)'},
@@ -840,7 +846,7 @@ class Component extends DCLogic {
     }));
 
     const inList=s.income.map(i=>{ const cur2=i.currency||'ARS'; return {
-      key:'in'+i.id, name:i.name, amount:this.money(i.amount,cur2), isUSD:cur2==='USD', check:i.active?'✓':'',
+      key:'in'+i.id, name:i.name, amount:this.money(i.amount,cur2), isUSD:cur2==='USD', check:i.active?'✓':'', once: (i.endIdx!=null && i.endIdx===i.startIdx),
       checkStyle:{width:'22px',height:'22px',flex:'none',borderRadius:'6px',border:'1.5px solid '+(i.active?'var(--green)':'var(--faint)'),background:i.active?'var(--green)':'transparent',color:'#0f1115',fontSize:'13px',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:'0'},
       nameStyle:{fontSize:'14px',fontWeight:'500',color:i.active?'var(--text)':'var(--faint)',textDecoration:i.active?'none':'line-through'},
       amtStyle:{fontFamily:"'Space Grotesk'",fontWeight:'500',fontSize:'14.5px',fontFeatureSettings:"'tnum'",color:i.active?'var(--green)':'var(--faint)'},
@@ -878,7 +884,7 @@ class Component extends DCLogic {
       // responsive
       isMobile:m,
       asideStyle: m
-        ? {position:'absolute',left:'14px',right:'84px',bottom:'26px',zIndex:'40',height:'62px',borderRadius:'31px',border:'1px solid var(--border2)',background:'var(--surface)',backdropFilter:'blur(32px) saturate(2.1)',WebkitBackdropFilter:'blur(32px) saturate(2.1)',boxShadow:'inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 1px rgba(255,255,255,0.04), 0 12px 36px rgba(0,0,0,0.32)',display:'flex',flexDirection:'row',alignItems:'stretch',padding:'0 4px'}
+        ? {position:'absolute',left:'14px',right:'84px',bottom:'26px',zIndex:'40',height:'62px',borderRadius:'31px',border:'1px solid var(--border2)',background:'color-mix(in srgb, var(--surface) 52%, transparent)',backdropFilter:'blur(34px) saturate(2.1)',WebkitBackdropFilter:'blur(34px) saturate(2.1)',boxShadow:'inset 0 1.5px 0 rgba(255,255,255,0.32), inset 0 -1px 1px rgba(255,255,255,0.04), 0 12px 36px rgba(0,0,0,0.32)',display:'flex',flexDirection:'row',alignItems:'stretch',padding:'0 4px'}
         : {width:'236px',flex:'none',borderRight:'1px solid var(--border)',background:'var(--surface)',display:'flex',flexDirection:'column',padding:'24px 18px'},
       brandStyle: m ? {display:'none'} : {display:'flex',alignItems:'center',gap:'11px',padding:'0 6px 26px'},
       navWrapStyle: m ? {position:'relative',display:'flex',flexDirection:'row',flex:'1',gap:'0'} : {display:'flex',flexDirection:'column',gap:'5px'},
@@ -902,7 +908,7 @@ class Component extends DCLogic {
       swNoche:this.swStyle(s.theme==='noche'), swPapel:this.swStyle(s.theme==='papel'), swCarbon:this.swStyle(s.theme==='carbon'),
       // month nav
       monthLabel:this.mLong(sel),
-      viewTitle: ({resumen:'Resumen', tarjeta:'Tarjeta de crédito', fijos:'Gastos fijos', ingresos:'Ingresos'})[s.view] || 'Resumen',
+      viewTitle: ({resumen:'Resumen', tarjeta:'Tarjeta de crédito', fijos:'Gastos', ingresos:'Ingresos'})[s.view] || 'Resumen',
       prev:()=>this.setState(()=>({selectedIdx:Math.max(cur-12, sel-1)})),
       next:()=>this.setState(()=>({selectedIdx:Math.min(cur+12, sel+1)})),
       // resumen
@@ -924,9 +930,12 @@ class Component extends DCLogic {
       fxList, fxName:s.fxName, fxAmount:s.fxAmount, fixedTotalFmt:this.fmt(fixedDirectTotal),
       onFxName:(e)=>this.setState({fxName:e.target.value}), onFxAmount:(e)=>this.setState({fxAmount:e.target.value}),
       addFixed:()=>this.addFixed(),
+      fxOnce:s.fxOnce, fxOnceLabel: s.fxOnce?'Una vez':'Mensual',
+      fxOnceBtnStyle:{fontSize:'12.5px',fontWeight:'600',padding:'11px 14px',borderRadius:'9px',cursor:'pointer',whiteSpace:'nowrap',border:'1px solid '+(s.fxOnce?'var(--sand)':'var(--border2)'),color:s.fxOnce?'var(--sand)':'var(--muted)',background:s.fxOnce?'var(--sand-dim)':'transparent'},
+      toggleFxOnce:()=>this.setState(st=>({fxOnce:!st.fxOnce})),
       // ingresos
       isIngresos:s.view==='ingresos', goIngresos:()=>this.setView('ingresos'), navIng:this.navStyle(s.view==='ingresos', m),
-      labFijos: m?'Fijos':'Gastos fijos',
+      labFijos: 'Gastos',
       balanceFmt: (balanceARS>=0?'+ ':'− ')+this.fmt(Math.abs(balanceARS)),
       balanceStyle: {fontFamily:"'Space Grotesk'",fontWeight:'600',fontSize:'14px',fontFeatureSettings:"'tnum'",color: balanceARS>=0?'var(--green)':'var(--sand)'},
       incomeArsFmt:this.fmt(incomeARS), incomeUsdFmt:this.fmtU(incomeUSD), hasIncomeUsd: incomeUSD>0,
@@ -935,6 +944,9 @@ class Component extends DCLogic {
       inCurLabel: s.inCur==='USD'?'US$':'Pesos $',
       inCurBtnStyle:{fontSize:'12.5px',fontWeight:'600',padding:'11px 14px',borderRadius:'9px',cursor:'pointer',whiteSpace:'nowrap',border:'1px solid '+(s.inCur==='USD'?'var(--sand)':'var(--border2)'),color:s.inCur==='USD'?'var(--sand)':'var(--muted)',background:s.inCur==='USD'?'var(--sand-dim)':'transparent'},
       toggleInCur:()=>this.setState(st=>({inCur: st.inCur==='USD'?'ARS':'USD'})),
+      inOnce:s.inOnce, inOnceLabel: s.inOnce?'Una vez':'Mensual',
+      inOnceBtnStyle:{fontSize:'12.5px',fontWeight:'600',padding:'11px 14px',borderRadius:'9px',cursor:'pointer',whiteSpace:'nowrap',border:'1px solid '+(s.inOnce?'var(--sand)':'var(--border2)'),color:s.inOnce?'var(--sand)':'var(--muted)',background:s.inOnce?'var(--sand-dim)':'transparent'},
+      toggleInOnce:()=>this.setState(st=>({inOnce:!st.inOnce})),
       addIncome:()=>this.addIncome(),
       // modal
       modalOpen:s.modalOpen, openModal:()=>this.openModal(), closeModal:()=>this.closeModal(), stop:(e)=>e.stopPropagation(),
