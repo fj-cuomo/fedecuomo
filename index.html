@@ -69,7 +69,7 @@
   </aside>
 
   <!-- MAIN -->
-  <main ref="{{ mainRef }}" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+  <main ref="{{ mainRef }}" style="flex:1; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain;">
     <div style="{{ mainInnerStyle }}">
 
       <!-- MOBILE TOP BAR -->
@@ -156,7 +156,7 @@
               <sc-for list="{{ forecast }}" as="bar" hint-placeholder-count="6">
                 <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:9px; cursor:pointer; height:100%; justify-content:flex-end;" onClick="{{ bar.onClick }}">
                   <div style="{{ bar.labelStyle }}">{{ bar.totalShort }}</div>
-                  <div style="width:100%; max-width:62px; display:flex; flex-direction:column; justify-content:flex-end; transform-origin:bottom; animation:growBar .5s cubic-bezier(.2,.7,.3,1);">
+                  <div style="width:100%; max-width:62px; display:flex; flex-direction:column; justify-content:flex-end;">
                     <div style="{{ bar.cardStyle }}"></div>
                     <div style="{{ bar.fijosStyle }}"></div>
                   </div>
@@ -238,7 +238,10 @@
                   </div>
                   <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
                     <div style="font-family:'Space Grotesk';font-weight:600;font-size:16px;font-feature-settings:'tnum';white-space:nowrap;">{{ p.monthly }}<span style="font-size:11.5px;color:var(--muted);font-weight:400;">{{ p.perMes }}</span></div>
-                    <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 4px;" style-hover="color:var(--sand);" onClick="{{ p.onDel }}">eliminar</button>
+                    <div style="display:flex; gap:12px;">
+                      <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 4px;" style-hover="color:var(--green);" onClick="{{ p.onEdit }}">editar</button>
+                      <button style="background:transparent;border:none;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 4px;" style-hover="color:var(--sand);" onClick="{{ p.onDel }}">eliminar</button>
+                    </div>
                   </div>
                 </div>
                 <div style="margin-top:13px; height:6px; background:var(--surface2); border-radius:4px; overflow:hidden;">
@@ -365,15 +368,17 @@
     <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; animation:fadeIn .2s ease;" onClick="{{ closeModal }}">
       <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:24px; width:440px; max-width:100%; max-height:92%; overflow-y:auto; box-shadow:0 16px 48px rgba(0,0,0,0.4); animation:popIn .24s ease;" onClick="{{ stop }}">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:19px;margin:0;letter-spacing:-0.3px;">Nuevo movimiento</h2>
+          <h2 style="font-family:'Space Grotesk';font-weight:600;font-size:19px;margin:0;letter-spacing:-0.3px;">{{ modalTitle }}</h2>
           <button style="background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;" onClick="{{ closeModal }}">×</button>
         </div>
 
-        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;">Tipo</label>
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
-          <button style="{{ kindCuotaStyle }}" onClick="{{ setKindCuota }}">En cuotas</button>
-          <button style="{{ kindDebitoStyle }}" onClick="{{ setKindDebito }}">Débito automático</button>
-        </div>
+        <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}">
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;">Tipo</label>
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button style="{{ kindCuotaStyle }}" onClick="{{ setKindCuota }}">En cuotas</button>
+            <button style="{{ kindDebitoStyle }}" onClick="{{ setKindDebito }}">Débito automático</button>
+          </div>
+        </sc-if>
 
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;">Moneda</label>
         <div style="display:flex; gap:8px; margin-bottom:16px;">
@@ -420,7 +425,7 @@
 
         <div style="display:flex; gap:12px;">
           <button style="flex:1;background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:11px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;" onClick="{{ closeModal }}">Cancelar</button>
-          <button style="{{ submitStyle }}" onClick="{{ submitForm }}">Registrar</button>
+          <button style="{{ submitStyle }}" onClick="{{ submitForm }}">{{ submitLabel }}</button>
         </div>
       </div>
     </div>
@@ -442,6 +447,10 @@
           <span style="font-size:14px;">Mes en curso</span>
           <span style="font-size:13px;color:var(--muted);text-transform:capitalize;">{{ monthLabel }}</span>
         </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;">Versión</span>
+          <span style="font-size:13px;color:var(--muted);font-family:'Space Grotesk';">{{ appVersion }}</span>
+        </div>
         <button style="width:100%;margin-top:18px;background:transparent;border:1px solid var(--border2);color:var(--sand);border-radius:11px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;" style-hover="border-color:var(--sand);" onClick="{{ clearData }}">Borrar todos los datos</button>
         <p style="margin:14px 0 0;font-size:11.5px;color:var(--faint);text-align:center;">Tus datos se guardan solo en este dispositivo.</p>
       </div>
@@ -454,6 +463,7 @@
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const ym = (y,m) => y*12+m;
+const APP_VERSION = '1.1';
 
 class Component extends DCLogic {
   rootRef = React.createRef();
@@ -475,7 +485,7 @@ class Component extends DCLogic {
     selectedIdx: this.currentIdx,
     vw: (typeof window!=='undefined' ? window.innerWidth : 1200),
     nextId: 300,
-    modalOpen: false, settingsOpen: false, rateOpen: false,
+    modalOpen: false, settingsOpen: false, rateOpen: false, editingId: null,
     form: { kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx: ym(2026,2), amountMode:'total' },
     fxName: '', fxAmount: '',
     inName: '', inAmount: '', inCur:'ARS',
@@ -512,6 +522,7 @@ class Component extends DCLogic {
   componentDidMount(){
     try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(e){}
     try{ ['gesturestart','gesturechange','gestureend'].forEach(function(ev){ document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false}); }); }catch(e){}
+    try{ document.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length>1) e.preventDefault(); }, {passive:false}); }catch(e){}
     const measure = ()=>{ const el=this.rootRef.current; if(el && el.clientWidth) this.setState({vw: el.clientWidth}); };
     this._ro = (typeof ResizeObserver!=='undefined') ? new ResizeObserver(measure) : null;
     if(this._ro && this.rootRef.current) this._ro.observe(this.rootRef.current);
@@ -654,12 +665,19 @@ class Component extends DCLogic {
   delFixed(id){ this.setState(s=>({fixed:s.fixed.filter(f=>f.id!==id)})); }
   setForm(k,v){ this.setState(s=>({form:{...s.form,[k]:v}})); }
   setView(v){ this.setState({view:v, _squish:true}); clearTimeout(this._sq); this._sq=setTimeout(()=>{ try{ this.setState({_squish:false}); }catch(e){} }, 280); }
-  openModal(){ this.setState({modalOpen:true, form:{kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx:this.selIdx(), amountMode:'total'}}); }
-  closeModal(){ this.setState({modalOpen:false}); }
+  openModal(){ this.setState({modalOpen:true, editingId:null, form:{kind:'cuota', currency:'ARS', desc:'', amount:'', cuotas:3, startIdx:this.selIdx(), amountMode:'total'}}); }
+  openEditPurchase(p){ this.setState({ modalOpen:true, editingId:p.id, form:{ kind:'cuota', currency:p.currency||'ARS', desc:p.desc, amount:String(p.total), cuotas:p.cuotas, startIdx:p.startIdx, amountMode:'total' } }); }
+  closeModal(){ this.setState({modalOpen:false, editingId:null}); }
   submitForm(){
     const f=this.state.form;
     const amt=this.parseAmount(f.amount, f.currency);
     if(!f.desc.trim() || amt<=0) return;
+    const editing=this.state.editingId;
+    if(editing!=null){
+      const total = (f.amountMode==='cuota') ? amt*f.cuotas : amt;
+      this.setState(s=>({ purchases:s.purchases.map(p=> p.id===editing ? {...p, desc:f.desc.trim(), total:total, cuotas:f.cuotas, startIdx:f.startIdx, currency:f.currency} : p), editingId:null, modalOpen:false, view:'tarjeta' }));
+      return;
+    }
     if(f.kind==='debito'){
       this.setState(s=>({ debits:[...s.debits, {id:s.nextId, desc:f.desc.trim(), amount:amt, currency:f.currency, startIdx:f.startIdx, endIdx:null}], nextId:s.nextId+1, modalOpen:false, view:'tarjeta' }));
     } else {
@@ -728,8 +746,8 @@ class Component extends DCLogic {
         key:'m'+f.idx, short:this.mShort(f.idx), totalShort:this.fmtShort(f.total),
         usdNote: f.usd>0 ? 'US$'+Math.round(f.usd) : '',
         onClick:()=>this.setState({selectedIdx:f.idx}),
-        cardStyle:{height:cardPx+'px',background:'var(--sand)',borderRadius:'5px 5px 0 0',opacity:on?1:0.5,transition:'opacity .2s'},
-        fijosStyle:{height:fijosPx+'px',background:'var(--green)',borderRadius:cardPx>0?'0':'5px 5px 0 0',marginTop:'2px',opacity:on?1:0.5,transition:'opacity .2s'},
+        cardStyle:{height:cardPx+'px',background:'var(--sand)',borderRadius:'5px 5px 0 0',opacity:on?1:0.5,transition:'height .35s ease, opacity .25s ease'},
+        fijosStyle:{height:fijosPx+'px',background:'var(--green)',borderRadius:cardPx>0?'0':'5px 5px 0 0',marginTop:'2px',opacity:on?1:0.5,transition:'height .35s ease, opacity .25s ease'},
         labelStyle:{fontFamily:"'Space Grotesk'",fontSize: m?'9.5px':'12px',fontWeight:'600',color:on?'var(--text)':'var(--faint)',fontFeatureSettings:"'tnum'",transition:'color .2s'},
         tickStyle:{fontSize: m?'10px':'12px',fontWeight:on?'600':'400',color:on?'var(--text)':'var(--muted)',textTransform:'capitalize',transition:'all .2s'},
         usdStyle:{fontSize:'9.5px',fontWeight:'600',color: on?'var(--sand)':'var(--faint)',fontFamily:"'Space Grotesk'",minHeight:'12px'},
@@ -767,7 +785,7 @@ class Component extends DCLogic {
         sub,
         badgeStyle:{fontSize:'11px',fontWeight:'600',padding:'3px 9px',borderRadius:'20px',color:color,background:done?'var(--green-dim)':(cur<p.startIdx?'var(--surface2)':'var(--sand-dim)'),border:'1px solid var(--border)',whiteSpace:'nowrap'},
         progStyle:{width:prog+'%',height:'100%',background:done?'var(--green)':'var(--sand)',borderRadius:'4px',transition:'width .4s ease'},
-        onDel:()=>this.delPurchase(p.id),
+        onDel:()=>this.delPurchase(p.id), onEdit:()=>this.openEditPurchase(p),
       };
     });
 
@@ -920,7 +938,8 @@ class Component extends DCLogic {
       addIncome:()=>this.addIncome(),
       // modal
       modalOpen:s.modalOpen, openModal:()=>this.openModal(), closeModal:()=>this.closeModal(), stop:(e)=>e.stopPropagation(),
-      settingsOpen:s.settingsOpen, openSettings:()=>this.setState({settingsOpen:true}), closeSettings:()=>this.setState({settingsOpen:false}),
+      settingsOpen:s.settingsOpen, openSettings:()=>this.setState({settingsOpen:true}), closeSettings:()=>this.setState({settingsOpen:false}), appVersion:APP_VERSION,
+      modalTitle: s.editingId!=null ? 'Editar compra' : 'Nuevo movimiento', notEditing: s.editingId==null, submitLabel: s.editingId!=null ? 'Guardar cambios' : 'Registrar',
       clearData:()=>this.setState({fixed:[],purchases:[],debits:[],income:[],settingsOpen:false}),
       form:f, isCuota,
       kindCuotaStyle:this.segStyle(isCuota), kindDebitoStyle:this.segStyle(!isCuota),
