@@ -454,7 +454,7 @@ class Component extends DCLogic {
   mainRef = React.createRef();
   scrollThumbRef = React.createRef();
   scrollEdgeRef = React.createRef();
-  currentIdx = ym(2026,2); // Marzo 2026
+  currentIdx = (function(){ const d=new Date(); return d.getFullYear()*12 + d.getMonth(); })(); // mes actual real
 
   themes = {
     noche:  {'--bg':'#0f1115','--bg-grad':'radial-gradient(60% 50% at 85% 6%, rgba(125,211,160,0.14), transparent 60%), radial-gradient(55% 48% at 8% 94%, rgba(230,185,127,0.12), transparent 60%), linear-gradient(160deg, #141e27, #0b0d12)','--surface':'rgba(26,31,41,0.55)','--surface2':'rgba(38,44,57,0.5)','--elev':'rgba(44,51,65,0.62)','--border':'rgba(255,255,255,0.12)','--border2':'rgba(255,255,255,0.2)','--text':'#e9e7e1','--muted':'#9aa0ad','--faint':'#626875','--green':'#7dd3a0','--green-dim':'rgba(125,211,160,0.16)','--sand':'#e6b97f','--sand-dim':'rgba(230,185,127,0.16)','--shadow':'rgba(0,0,0,0.4)','--glass':'blur(22px) saturate(1.7)','--glass-shadow':'inset 0 1px 0 rgba(255,255,255,0.18), 0 14px 42px rgba(0,0,0,0.34)'},
@@ -465,7 +465,7 @@ class Component extends DCLogic {
   state = {
     view: 'resumen',
     theme: 'noche',
-    selectedIdx: ym(2026,2),
+    selectedIdx: this.currentIdx,
     vw: (typeof window!=='undefined' ? window.innerWidth : 1200),
     nextId: 300,
     modalOpen: false, settingsOpen: false, rateOpen: false,
